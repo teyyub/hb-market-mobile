@@ -34,4 +34,13 @@ class Partnyor {
   String toString() {
     return 'Partnyor(id: $id, ad: $ad, borc: $borc, tip: $tip, aktiv: $aktiv)';
   }
+
+  // Add equality based on id
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Partnyor && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

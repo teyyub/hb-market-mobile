@@ -11,10 +11,9 @@ import 'package:hbmarket/modules/partnyor_module/controller/partnyor_controller.
 
 class AddPartnyorDialog extends StatelessWidget {
   final amountController = TextEditingController();
-  // final phoneController = TextEditingController();
   final partnyorCtrl =
       Get.find<PartnyorController>(); // Get the existing controller
-  final KassaController kassaController = Get.put(KassaController());
+  final KassaController kassaController = Get.find<KassaController>();
   final void Function(int mustId, double amount, String tip, int kassaId)
   onSave;
   final int mustId;
@@ -22,12 +21,12 @@ class AddPartnyorDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String selectedRadio = '+';
+    // String selectedRadio = '+';
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         GetBuilder<KassaController>(
-          builder: (ctrl) {
+          builder: (KassaController ctrl) {
             return DropdownSelector<Kassa>(
               label: 'selectKassa'.tr,
               selectedValue: ctrl.selectedKassa,
@@ -41,20 +40,20 @@ class AddPartnyorDialog extends StatelessWidget {
 
         TextField(
           controller: amountController,
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
             // optional: allows up to 2 decimal places
           ],
           decoration: InputDecoration(
             labelText: 'amount'.tr,
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
 
         GetBuilder<PartnyorController>(
-          builder: (ctrl) {
+          builder: (PartnyorController ctrl) {
             return RadioGroupComponent<String>(
               value: ctrl.selectedRadio,
               onChanged: (val) => ctrl.setSelectedRadio(val),
@@ -76,7 +75,10 @@ class AddPartnyorDialog extends StatelessWidget {
               onPressed: () {
                 final amount = double.tryParse(amountController.text.trim());
                 final kassaId = kassaController.selectedKassa?.id;
-                if (amount == null || kassaId == null) {
+                final selectedRadio = partnyorCtrl.selectedRadio;
+                if (amount == null ||
+                    kassaId == null ||
+                    selectedRadio.isEmpty) {
                   Get.snackbar('Error', 'Məlumatları düzgün doldurun!');
                   return;
                 }

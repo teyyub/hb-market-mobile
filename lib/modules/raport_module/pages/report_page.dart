@@ -16,8 +16,8 @@ import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class ReportPage extends StatelessWidget {
-  final ReportController controller = Get.put(ReportController());
-  final ObyektController obyController = Get.put(ObyektController());
+  final ReportController controller = Get.find<ReportController>();
+  final ObyektController obyController = Get.find<ObyektController>();
   final ScrollController listScrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,8 @@ class ReportPage extends StatelessWidget {
     //       ),
     //     ],
     //   ),
-    return MainLayout(title: 'Raport', 
+    return MainLayout(
+      title: 'Raport',
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),

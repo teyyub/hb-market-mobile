@@ -18,4 +18,13 @@ class Obyekt {
   String toString() {
     return 'Obyect(id: $id, name: $name)';
   }
+
+  // Equality based on id
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Obyekt && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

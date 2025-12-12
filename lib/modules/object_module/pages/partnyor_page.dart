@@ -5,7 +5,7 @@ import 'package:hbmarket/modules/object_module/controller/obyekt_controller.dart
 import 'package:hbmarket/modules/partnyor_module/controller/partnyor_controller.dart';
 
 class PartnyorPage extends StatelessWidget {
-  final PartnyorController controller = Get.put(PartnyorController());
+  final PartnyorController controller = Get.find<PartnyorController>();
 
   @override
   Widget build(BuildContext context) {

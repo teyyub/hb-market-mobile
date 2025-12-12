@@ -14,29 +14,6 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     bool isMobile = DeviceUtils.isMobile(context);
-
-    // Wrap GridView/ListView with SingleChildScrollView if needed
-    // return Scaffold(
-    //   appBar: AppBar(
-    //     backgroundColor: Colors.blue, // or any contrasting color
-    //     foregroundColor: Colors.white,
-    //     title: Text(''),
-    //     leading: IconButton(
-    //       onPressed: () => Get.back(),
-    //       icon: const Icon(Icons.arrow_back),
-    //     ),
-    //     actions: [
-    //       IconButton(
-    //         icon: const Icon(Icons.logout),
-    //         tooltip: 'Logout',
-    //         onPressed: () {
-    //           print('logout dahsboard');
-    //           Get.offAllNamed(RouteHelper.login);
-    //         },
-    //       ),
-    //     ],
-    //   ),
-    // drawer: isMobile ? AppDrawer() : null,
     return MainLayout(
       title: 'Dashboard',
       body: Center(
@@ -47,15 +24,16 @@ class DashboardPage extends StatelessWidget {
                   children: controller.menuItems.map((item) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: ElevatedButton.icon(
-                        icon: Icon(item['icon']),
-                        label: Text(item['titleKey'].toString().tr),
-                        onPressed: () =>
-                            controller.selectPage(item['titleKey']),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size(double.infinity, 60),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: _buildDashboardButton(
+                          icon: item['icon'],
+                          label: item['titleKey'].toString().tr,
+                          onPressed: () =>
+                              controller.selectPage(item['titleKey']),
                         ),
                       ),
+
                     );
                   }).toList(),
                 )
@@ -67,17 +45,58 @@ class DashboardPage extends StatelessWidget {
                     return SizedBox(
                       width: 200,
                       height: 60,
-                      child: ElevatedButton.icon(
-                        icon: Icon(item['icon']),
-                        label: Text(item['titleKey'].toString().tr),
+                      child: _buildDashboardButton(
+                        icon: item['icon'],
+                        label: item['titleKey'].toString().tr,
                         onPressed: () =>
                             controller.selectPage(item['titleKey']),
                       ),
+                      // child: ElevatedButton.icon(
+                      //   icon: Icon(item['icon']),
+                      //   label: Text(item['titleKey'].toString().tr),
+                      //   onPressed: () =>
+                      //       controller.selectPage(item['titleKey']),
+                      // ),
                     );
                   }).toList(),
                 ),
         ),
       ),
+    );
+  }
+
+  /// Modern Dashboard Button
+  Widget _buildDashboardButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 28),
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      style:
+          ElevatedButton.styleFrom(
+            elevation: 4,
+            backgroundColor: Colors.blueAccent, // M3 primary color
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ).copyWith(
+            // Hover effect for web/desktop
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.hovered))
+                return Colors.blue.shade700;
+              if (states.contains(WidgetState.pressed))
+                return Colors.blue.shade900;
+              return null;
+            }),
+          ),
     );
   }
 }

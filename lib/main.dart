@@ -1,16 +1,26 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:hbmarket/internet_check.dart';
 import 'package:hbmarket/modules/common/app_binding.dart';
 import 'package:hbmarket/routes/route_helper.dart';
+import 'package:hbmarket/thema/theme.dart';
+import 'package:hbmarket/thema/theme_controller.dart';
 import 'package:hbmarket/translation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'modules/common/app_logger.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await GetStorage.init();
+  // Logger hazırdır
+  // final log = AppLogger().logger;
+  // log.i("App başlatıldı");
+
+  Get.put(ThemeController());
   debugPaintSizeEnabled = false;
   final jsonTrans = JsonTranslations();
   await jsonTrans.load();
@@ -25,19 +35,17 @@ void main() async {
     initialRoute = (dbName != null && dbName.isNotEmpty)
         ? RouteHelper.dashboard
         : RouteHelper.user_db;
-  } else if (savedLang == null) {
-    initialRoute = '/language';
+  // }
+  // else if (savedLang == null) {
+  //   initialRoute = '/language';
   } else {
     initialRoute = RouteHelper.login;
   }
 
-  print('loggedIn... ${loggedIn}');
-  // print('initialLang ... ${initialLang}');
-  print('initialRoute.. ${initialRoute}');
   runApp(
     MyApp(
       translate: jsonTrans,
-      initialLang: savedLang,
+      initialLang: savedLang ?? 'az',
       loggedIn: loggedIn,
       initialRoute: initialRoute,
     ),
@@ -61,10 +69,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    // print('loggedIn... ${loggedIn}');
-    // print('initialLang ... ${initialLang}');
-    // print('initialRoute.. ${initialRoute}');
-    return GetMaterialApp(
+    // final ThemeController themeController = Get.put(ThemeController());
+    return GetBuilder<ThemeController>(
+        builder: (ThemeController themeController) => GetMaterialApp(
       title: 'Admin Dashboard',
       debugShowCheckedModeBanner: false,
       translations: translate,
@@ -76,12 +83,17 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      initialRoute: RouteHelper.login,
+      // initialRoute: RouteHelper.login,
+      initialRoute: initialRoute,
       getPages: RouteHelper.routes,
-      builder: (context, child) {
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode:
+      themeController.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      builder: (BuildContext context, Widget? child) {
         return InternetBanner(child: child ?? const SizedBox());
       },
       initialBinding: AppBindings(),
-    );
+    ));
   }
 }

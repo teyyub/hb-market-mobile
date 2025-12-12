@@ -19,9 +19,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:hbmarket/modules/raport_module/common/export_html.dart';
 
 class ReportController extends GetxController {
-  final ObyektController obyController = Get.put(ObyektController());
-  // final TextEditingController startDateController = TextEditingController();
-  // final TextEditingController endDateController = TextEditingController();
+  // final ObyektController obyController = Get.put(ObyektController());
+  final ObyektController obyController = Get.find<ObyektController>();
   List<Report> reports = [];
   List<Report> reports1 = [];
   String searchQuery = '';
@@ -183,7 +182,7 @@ class ReportController extends GetxController {
     );
   }
 
-  void fetchReports() async {
+  Future<void> fetchReports() async {
     try {
       print(
         'DbSelectionController.to.selectedDb..${DbSelectionController.to.getDbId}',

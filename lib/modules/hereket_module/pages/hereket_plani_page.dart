@@ -1,69 +1,485 @@
 import 'package:data_table_2/data_table_2.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hbmarket/main_page.dart';
-import 'package:hbmarket/modules/common/utils/device_utils.dart';
+import 'package:hbmarket/modules/common/widgets/column_visibility_menu.dart';
 import 'package:hbmarket/modules/common/widgets/custom_table.dart';
+import 'package:hbmarket/modules/common/widgets/trina_grid_widget.dart';
 import 'package:hbmarket/modules/hereket_module/controller/hereket_plani_controller.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_model.dart';
-import 'package:hbmarket/modules/login_module/controller/db_selection_controller.dart';
+import 'package:hbmarket/modules/hereket_module/models/hereket_reponse.dart';
+import 'package:hbmarket/modules/hereket_module/models/hereket_request.dart';
+import 'package:hbmarket/modules/hereket_module/pages/qaime_bax_page.dart';
+import 'package:hbmarket/modules/hereket_module/widget/hereket_widget.dart';
+import 'package:hbmarket/modules/hereket_module/widget/work_widget.dart';
 import 'package:hbmarket/modules/object_module/controller/obyekt_controller.dart';
 import 'package:hbmarket/modules/raport_module/controller/report_controller.dart';
-import 'package:hbmarket/modules/raport_module/models/report_model.dart';
 import 'package:pdf/pdf.dart' show PdfPageFormat, PdfColors;
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:trina_grid/trina_grid.dart';
 
 class HereketPlaniPage extends StatelessWidget {
-  final ReportController controller = Get.put(ReportController());
-  final ObyektController obyController = Get.put(ObyektController());
-  final HereketPlaniController hereketController = Get.put(
-    HereketPlaniController(),
-  );
+  final ReportController controller = Get.find<ReportController>();
+  final ObyektController obyController = Get.find<ObyektController>();
+  final HereketPlaniController hereketController =
+      Get.find<HereketPlaniController>();
   @override
   Widget build(BuildContext context) {
-    final isMobile = DeviceUtils.isMobile(context);
-    // return Scaffold(
-    //   appBar: AppBar(
-    //     title: Text('Hereket'.tr), // You can replace with your title
-    //     centerTitle: true,
-    //     actions: [
-    //       IconButton(
-    //         icon: Icon(Icons.refresh),
-    //         onPressed: () {
-    //           // Optional: trigger refresh
-    //         },
-    //       ),
-    //     ],
-    //   ),
-
     return MainLayout(
-      title: 'Hereket'.tr,
+      title: 'Hərəkət planı'.tr,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Expanded(
-                child: GetBuilder<HereketPlaniController>(
-                  builder: (ctrl) {
-                    // _buildTopControls(context),
-                    // const SizedBox(height: 16),
-                    return _buildTable2(ctrl);
-                  },
-                ),
-              ),
-            ],
+
+          child: GetBuilder<HereketPlaniController>(
+            builder: (HereketPlaniController ctrl) {
+              if (ctrl.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Card(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: LayoutBuilder(
+                        builder: (BuildContext context, BoxConstraints constraints) {
+                          return SizedBox(
+                            width: constraints.maxWidth,
+                            height:
+                                constraints.maxHeight, // ensures bounded height
+                            child: _buildTrinaGrid(ctrl),
+                            // child: _buildTable2(ctrl),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+
+                  Row(
+                    children: [
+
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Get.to(() => QaimeBaxPage(dplanId: ctrl.selectedId!,));
+                          },
+                          child: const Text('Bax'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _openDialog();
+                          },
+                          child: const Text('Funksiyalar'),
+                        ),
+                      ),
+
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
-          // child: GetBuilder<CustomerController>(
-          //   builder: (ctrl) {
-          //     return kIsWeb ? _buildListView(ctrl) : _buildGridView(ctrl);
-          //   },
-          // ),
         ),
       ),
+    );
+  }
+
+  void _openDialog() {
+    Get.bottomSheet(
+      DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.7, // start at 70% of screen
+        minChildSize: 0.3,
+        maxChildSize: 0.95,
+        builder: (BuildContext context, ScrollController scrollController) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: SizedBox.expand(
+              child: ListView(
+                // shrinkWrap: true,
+                controller: scrollController,
+                children: [
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                       hereketController.refreshHereket();
+                    },
+                    child: Text("refresh".tr),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      // if (hereketController.selectedId == null) return;
+                      // print('addClicked...');
+                      // _openDialog();
+                      _openBottomSheet();
+                    },
+                    child: Text("buttonNew".toString().tr),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (hereketController.selectedId == null) return;
+                      final selected = hereketController.herekets.firstWhere(
+                        (t) => t.id == hereketController.selectedId,
+                      );
+
+                      final editData = HereketRequest(
+                        id: selected.id,
+                        hereketId: selected.hereket?.id,
+                        obyektId: selected.obyekt?.id,
+                        partnyorId: selected.partnyor?.id,
+                        percentage: Decimal.parse(
+                          selected.percentage.toString(),
+                        ),
+                        note: selected.note,
+                      );
+
+                      _openBottomSheet(initial: editData);
+                    },
+                    child: Text("buttonUpdate".tr),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (hereketController.selectedId == null) return;
+                      // Show confirmation dialog
+                      final confirm = await Get.dialog<bool>(
+                        AlertDialog(
+                          title: Text("Təsdiqlə".tr),
+                          content: Text("Əminsiniz?".tr),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Get.back(result: false), // return false
+                              child: Text("Xeyr".tr),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Get.back(result: true), // return true
+                              child: Text("Bəli".tr),
+                            ),
+                          ],
+                        ),
+                        barrierDismissible: false,
+                      );
+
+
+                      if (confirm != true) return;
+                      await hereketController.deleteHereket(
+                        hereketController.selectedId!,
+                      );
+                      Get.snackbar(
+                        "Uğurla silindi".tr,
+                        "",
+                        snackPosition: SnackPosition.TOP,
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(12),
+                        borderRadius: 8,
+                        duration: const Duration(seconds: 3),
+                      );
+                      // Get.back();
+                    },
+                    child: Text("buttonDel".tr),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (hereketController.selectedObyekt == null) return;
+                      int? obyektId = hereketController.selectedObyekt?.id;
+                      debugPrint('obyektId...${obyektId}');
+                      // final selected = hereketController.herekets.firstWhere(
+                      //   (t) => t.id == hereketController.selectedObyekt?.id,
+                      // );
+                      _openWorkBottomSheet1(context, obyektId!);
+                      // _openWork();
+                    },
+                    child: Text("buttonWork".tr),
+                  ),
+
+                const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    child: Text("cix".tr),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      // isScrollControlled: true,
+      // backgroundColor: Colors.transparent, // optional
+    );
+  }
+
+  void _openWork() async {
+    final result = await Get.to<HereketRequest>(
+      () => Scaffold(
+        appBar: AppBar(
+          // title: Text(initial == null ? 'Yeni Hərəkət' : 'Redaktə'),
+        ),
+        body: WorkWidget(
+          obyektId: 0,
+          hereketId: 0,
+          dPlanId: 0,
+          // initial: initial,
+          onSave: (dto) {
+            Get.back(result: dto); // send data back
+          },
+        ),
+      ),
+    );
+
+    if (result != null) {
+      final ctrl = Get.find<HereketPlaniController>();
+
+      //   if (initial == null) {
+      //     await ctrl.saveNewHereket(result);
+      //   } else {
+      //     await ctrl.updateHereket(result);
+      //   }
+
+      //   ctrl.fetchHerekets(); // refresh your grid
+      // }
+    }
+  }
+
+  // void _openWorkBottomSheet1(BuildContext context, int obyektId) {
+  //   debugPrint('before open dialiog dplanid: ${hereketController.dplaId}');
+  //   Get.bottomSheet(
+  //     Container(
+  //       height: MediaQuery.of(context).size.height,
+  //       padding: const EdgeInsets.all(16),
+  //       decoration: const BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //       ),
+  //       child: SingleChildScrollView(
+  //         child: WorkWidget(
+  //           obyektId: obyektId,
+  //           hereketId: hereketController.selectedHereketDto!.id,
+  //           dPlanId: hereketController.dplaId!,
+  //           initial: null,
+  //           onSave: (HereketRequest dto) async {
+  //             Get.back(); // Close the bottom sheet
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //   );
+  // }
+
+  void _openWorkBottomSheet1(BuildContext context, int obyektId) {
+    debugPrint('before open dialiog dplanid: ${hereketController.dplaId}');
+
+    Get.bottomSheet(
+      DraggableScrollableSheet(
+        expand: true, // Tam ekran üçün
+        initialChildSize: 0.95, // Açılışda 95% hündürlük
+        minChildSize: 0.5,      // minimal hündürlük
+        maxChildSize: 0.95,     // maksimum hündürlük
+        builder: (BuildContext context, ScrollController scrollController) {
+          return GestureDetector(
+              behavior: HitTestBehavior.translucent, // boş yerlərdə də klik tutsun
+              onTap: () {
+                FocusScope.of(context).unfocus(); // 👉 klaviaturanı gizlədir
+              },
+              child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: SingleChildScrollView(
+              controller: scrollController, // scroll üçün
+              child: WorkWidget(
+                obyektId: obyektId,
+                hereketId: hereketController.selectedHereketDto!.id,
+                dPlanId: hereketController.dplaId!,
+                initial: null,
+                onSave: (HereketRequest dto) async {
+                  Get.back(); // Close the bottom sheet
+                },
+              ),
+            ),
+          ));
+        },
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+
+  void _openWorkBottomSheet() {
+    Get.bottomSheet(
+      DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 1.0,
+        builder: (context, scrollController) {
+          //     return LayoutBuilder(
+          //       builder: (context, constraints) {
+          //         return Container(
+          //           padding: const EdgeInsets.all(16),
+          //           decoration: const BoxDecoration(
+          //             color: Colors.white,
+          //             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          //           ),
+          //           child: SingleChildScrollView(
+          //             controller: scrollController,
+          //             child: ConstrainedBox(
+          //               constraints: BoxConstraints(
+          //                 minHeight: constraints.maxHeight,
+          //               ),
+          //               // child: WorkWidget(
+          //               //   id: 0,
+          //               //   initial: null,
+          //               //   onSave: (dto) => Get.back(),
+          //               // ),
+          //             ),
+          //           ),
+          //         );
+          //       },
+          // );
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: WorkWidget(
+                obyektId: 0,
+                hereketId: 0,
+                dPlanId: 0,
+                initial: null,
+                onSave: (dto) async {
+                  // final ctrl = Get.find<HereketPlaniController>();
+
+                  // if (initial == null) {
+                  //   await ctrl.saveNewHereket(dto);
+                  // } else {
+                  //   await ctrl.updateHereket(dto);
+                  // }
+
+                  Get.back(); // Close the bottom sheet
+                },
+              ),
+            ),
+          );
+        },
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  void _openBottomSheet({HereketRequest? initial}) async {
+    final HereketPlaniController ctrl = Get.find<HereketPlaniController>();
+    ctrl.resetSelections();
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+    // await ctrl.preloadData();
+    Get.back();
+    // await Get.showOverlay(
+    //   asyncFunction: () async => await ctrl.preloadData(),
+    //   loadingWidget: const Center(child: CircularProgressIndicator()),
+    // );
+
+    Get.bottomSheet(
+      DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.8, // start at 70% of screen
+        minChildSize: 0.3,
+        maxChildSize: 0.95,
+        builder: (BuildContext context, ScrollController scrollController) {
+          return GestureDetector(
+              behavior: HitTestBehavior.opaque, // boş sahələrdə klikləri də tutmaq üçün
+              onTap: () {
+                Get.focusScope?.unfocus();
+              },
+           child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: SingleChildScrollView(
+              controller: scrollController, // attach scrollController!
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Yeni hərəkət planı'.tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Get.back(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  HereketWidget(
+                    id: hereketController.selectedId,
+                    initial: initial,
+                    onSave: (HereketRequest dto) async {
+                      debugPrint('initialValues ${initial?.toJson()} ${dto}');
+                      if (initial == null) {
+                        await hereketController.saveNewHereket(dto);
+                        // await ctrl.fetchHereketPlani();
+                        Get.back();
+                      } else {
+                        // debugPrint('111111 ..${dto.toJson()}');
+                        await hereketController.updateHereket(dto);
+                        await ctrl.fetchHereketPlani();
+                        Get.back();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          )
+          );
+        },
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent, // optional
     );
   }
 
@@ -72,7 +488,7 @@ class HereketPlaniPage extends StatelessWidget {
       data: [],
       sortColumnIndex: 0,
       sortAscending: true,
-      columns: [
+      columns: const [
         DataColumn2(
           label: Text('No'),
           // onSort: (colIndex, asc) => ctrl.sort<num>((k) => k.id, colIndex, asc),
@@ -103,204 +519,6 @@ class HereketPlaniPage extends StatelessWidget {
             ],
           );
         }).toList();
-      },
-    );
-  }
-
-  Widget _buildMobileListView(ReportController ctrl, BuildContext context) {
-    if (ctrl.reportItems.isEmpty) {
-      return Center(child: Text("notFound".tr));
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: ctrl.reportItems.length,
-      itemBuilder: (context, index) {
-        final group = ctrl.reportItems[index];
-        final rows = group.rows ?? [];
-        if (rows.isEmpty) return const SizedBox.shrink();
-        final headers = rows.expand((row) => row.fields.keys).toSet().toList();
-
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: ExpansionTile(
-            title: Text(
-              group.basliq,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Table(
-                  border: TableBorder.all(color: Colors.grey.shade300),
-                  defaultColumnWidth: const IntrinsicColumnWidth(),
-                  children: [
-                    // Header row
-                    TableRow(
-                      decoration: BoxDecoration(color: Colors.blue[100]),
-                      children: headers.map((h) {
-                        return Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: Text(
-                            h,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    // Data rows
-                    ...rows.map((row) {
-                      return TableRow(
-                        children: headers.map((h) {
-                          final field = row.fields[h];
-                          return Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Text(
-                              field?.value?.toString() ?? '',
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTopControls(BuildContext context) {
-    // final isMobile = MediaQuery.of(context).size.width < 600;
-    final isMobile = DeviceUtils.isMobile(context);
-    return GetBuilder<ReportController>(
-      builder: (ctrl) {
-        return Card(
-          color: Colors.blue[50],
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: isMobile
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => _openFooDialog(context),
-                        child: Text("selectObject".tr),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTimeSelectors(context),
-                      const SizedBox(height: 12),
-                      _buildReportIdSelector(),
-                      const SizedBox(height: 12),
-
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          SizedBox(
-                            width: isMobile ? double.infinity : 160,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              icon: const Icon(Icons.download),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text('btnFetchReport'.tr),
-                              ),
-                              onPressed: () {
-                                ctrl.fetchReportPrint();
-                              },
-                            ),
-                          ),
-                          // const SizedBox(width: 12),
-                          SizedBox(
-                            width: isMobile ? double.infinity : 160,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              icon: const Icon(Icons.print),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  "btnPrint".tr,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-
-                              onPressed: () => printReports(controller),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => _openFooDialog(context),
-                              child: const Text("Select Obyekt"),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildTimeSelectors(context),
-                            const SizedBox(height: 12),
-                            _buildReportIdSelector(),
-                            const SizedBox(height: 12),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.download),
-                            label: Text("btnFetchReport".tr),
-                            onPressed: () {
-                              ctrl.fetchReportPrint();
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.print),
-                            label: Text("btnPrint".tr),
-                            onPressed: () => printReports(controller),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-          ),
-        );
       },
     );
   }
@@ -497,411 +715,6 @@ class HereketPlaniPage extends StatelessWidget {
     // );
   }
 
-  Widget _buildTimeSelectors(BuildContext context) {
-    return GetBuilder<ReportController>(
-      builder: (ctrl) {
-        return Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // const Text("Start Time"),
-                  TextFormField(
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: "startDate".tr,
-                      suffixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                    controller: TextEditingController(
-                      text: ctrl.startDate != null
-                          ? "${ctrl.startDate!.day}/${ctrl.startDate!.month}/${ctrl.startDate!.year}"
-                          : "",
-                    ),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: ctrl.startDate ?? DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) ctrl.setStartDate(picked);
-                    },
-                  ),
-                  // TextButton(
-                  //   onPressed: () async {
-                  //     final picked = await showDatePicker(
-                  //       context: context,
-                  //       initialDate: ctrl.startDate ?? DateTime.now(),
-                  //       firstDate: DateTime(2000),
-                  //       lastDate: DateTime(2100),
-                  //     );
-                  //     if (picked != null) ctrl.setStartDate(picked);
-                  //   },
-                  //   child: Text(
-                  //     ctrl.startDate != null
-                  //         ? "${ctrl.startDate!.day}/${ctrl.startDate!.month}/${ctrl.startDate!.year}"
-                  //         : "Select Start",
-                  //   ),
-                  // ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            // InputDatePickerFormField(
-            //   firstDate: DateTime(2000),
-            //   lastDate: DateTime(2100),
-            //   initialDate: ctrl.startDate ?? DateTime.now(),
-            //   onDateSubmitted: (date) => ctrl.setStartDate(date),
-            //   onDateSaved: (date) => ctrl.setStartDate(date),
-            // ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // const Text("End Time"),
-                  TextField(
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: "endDate".tr,
-                      suffixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                    controller: TextEditingController(
-                      text: ctrl.endDate != null
-                          ? "${ctrl.endDate!.day}/${ctrl.endDate!.month}/${ctrl.endDate!.year}"
-                          : "",
-                    ),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: ctrl.endDate ?? DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) ctrl.setEndDate(picked);
-                    },
-                  ),
-                  // TextButton(
-                  //   onPressed: () async {
-                  //     final picked = await showTimePicker(
-                  //       context: context,
-                  //       initialTime: ctrl.endTime ?? TimeOfDay.now(),
-                  //     );
-                  //     if (picked != null) ctrl.setEndTime(picked);
-                  //   },
-                  //   child: Text(
-                  //     ctrl.endTime != null
-                  //         ? ctrl.endTime!.format(context)
-                  //         : "Select End",
-                  //   ),
-                  // ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildSearchField() {
-    return TextField(
-      decoration: InputDecoration(
-        labelText: 'Search customers',
-        prefixIcon: Icon(Icons.search),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      onChanged: (value) {
-        // controller.setSearchQuery(value); // Filter logic in controller
-      },
-    );
-  }
-
-  Widget _buildReportIdSelector() {
-    return GetBuilder<ReportController>(
-      builder: (ctrl) {
-        return DropdownButtonFormField<Report>(
-          decoration: InputDecoration(
-            labelText: "selectReport".tr,
-            border: OutlineInputBorder(),
-          ),
-          value: ctrl.selectedReport,
-          items: ctrl.reports.map((report) {
-            return DropdownMenuItem(
-              value: report,
-              child: Text("${report.name}"),
-            );
-          }).toList(),
-          onChanged: (value) {
-            if (value != null) ctrl.setSelectedReport(value);
-          },
-        );
-      },
-    );
-  }
-
-  // Widget _buildListView(ReportController ctrl) {
-  //   final items = ctrl.reportItems;
-  //   return ListView.separated(
-  //     // padding: EdgeInsets.all(16),
-  //     itemCount: ctrl.reportItems.length,
-  //     separatorBuilder: (_, __) => SizedBox(height: 8),
-  //     itemBuilder: (context, index) {
-  //       final dto = ctrl.reportItems[index];
-  //       return Card(
-  //         margin: EdgeInsets.symmetric(vertical: 8),
-  //         child: Padding(
-  //           padding: const EdgeInsets.all(8.0),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.stretch,
-  //             children: dto.fields.entries.map((entry) {
-  //               final field = entry.value;
-
-  //               // Determine text alignment
-  //               TextAlign textAlign = TextAlign.left;
-  //               if (field.alignment == 'right')
-  //                 textAlign = TextAlign.right;
-  //               else if (field.alignment == 'center')
-  //                 textAlign = TextAlign.center;
-
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(vertical: 2),
-  //                 child: Text(
-  //                   '${entry.key}: ${field.value}',
-  //                   textAlign: textAlign,
-  //                   style: const TextStyle(fontSize: 16),
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
-  // Widget _buildListView(ReportController ctrl) {
-  //   return ListView.separated(
-  //     itemCount: ctrl.reportItems.length,
-  //     separatorBuilder: (_, __) => const SizedBox(height: 8),
-  //     itemBuilder: (context, index) {
-  //       final dto = ctrl.reportItems[index];
-  //       return Card(
-  //         margin: const EdgeInsets.symmetric(vertical: 8),
-  //         child: Padding(
-  //           padding: const EdgeInsets.all(8.0),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.stretch,
-  //             children: dto.fields.entries.map((entry) {
-  //               final field = entry.value;
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(vertical: 2),
-  //                 child: Row(
-  //                   mainAxisAlignment: field.alignment == 'right'
-  //                       ? MainAxisAlignment.end
-  //                       : field.alignment == 'center'
-  //                       ? MainAxisAlignment.center
-  //                       : MainAxisAlignment.start,
-  //                   children: [
-  //                     Text(
-  //                       '${entry.key}: ',
-  //                       style: const TextStyle(
-  //                         fontWeight: FontWeight.bold,
-  //                         fontSize: 16,
-  //                       ),
-  //                     ),
-  //                     Text(
-  //                       '${field.value}',
-  //                       style: const TextStyle(fontSize: 16),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-  // Widget _buildListView(ReportController ctrl) {
-  //   if (ctrl.reportItems.isEmpty) {
-  //     return const Center(child: Text("No results found"));
-  //   }
-
-  //   return SingleChildScrollView(
-  //     scrollDirection: Axis.vertical,
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.stretch,
-  //       children: ctrl.reportItems.map((group) {
-  //         final headers = group.rows
-  //             .expand((row) => row.fields.keys)
-  //             .toSet()
-  //             .toList();
-
-  //         return Column(
-  //           crossAxisAlignment: CrossAxisAlignment.stretch,
-  //           children: [
-  //             // Group title
-  //             Container(
-  //               color: Colors.blue[200],
-  //               padding: const EdgeInsets.all(8),
-  //               child: Text(
-  //                 group.basliq,
-  //                 style: const TextStyle(
-  //                   fontSize: 18,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ),
-  //             // Table header
-  //             Container(
-  //               color: Colors.blue[100],
-  //               child: Row(
-  //                 children: headers.map((h) {
-  //                   return Container(
-  //                     width: 120, // same as row cells
-  //                     padding: const EdgeInsets.all(8.0),
-  //                     decoration: BoxDecoration(
-  //                       border: Border(
-  //                         bottom: BorderSide(color: Colors.grey.shade300),
-  //                         right: BorderSide(color: Colors.grey.shade300),
-  //                       ),
-  //                     ),
-  //                     child: Text(
-  //                       h,
-  //                       textAlign: TextAlign.center,
-  //                       style: const TextStyle(fontWeight: FontWeight.bold),
-  //                     ),
-  //                   );
-  //                 }).toList(),
-  //               ),
-  //             ),
-  //             // Table rows
-  //             SingleChildScrollView(
-  //               scrollDirection: Axis.horizontal,
-  //               child: Column(
-  //                 children: group.rows.map((row) {
-  //                   return Row(
-  //                     children: headers.map((h) {
-  //                       final field = row.fields[h];
-  //                       return Container(
-  //                         width: 120, // fixed width for better alignment
-  //                         padding: const EdgeInsets.all(8),
-  //                         decoration: BoxDecoration(
-  //                           border: Border(
-  //                             bottom: BorderSide(color: Colors.grey.shade300),
-  //                             right: BorderSide(color: Colors.grey.shade300),
-  //                           ),
-  //                         ),
-  //                         child: Text('${field?.value}'),
-  //                       );
-  //                     }).toList(),
-  //                   );
-  //                 }).toList(),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 16),
-  //           ],
-  //         );
-  //       }).toList(),
-  //     ),
-  //   );
-  // }
-
-  Widget _buildListView(ReportController ctrl, BuildContext context) {
-    if (ctrl.reportsFetched) {
-      return Center(child: Text("notFound".tr));
-    }
-
-    return SingleChildScrollView(
-      // scrollDirection: Axis.vertical,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: ctrl.reportItems.map((group) {
-          final rows = group.rows ?? [];
-          if (rows.isEmpty) {
-            //   // ✅ Skip this group entirely
-            return const SizedBox.shrink();
-          }
-          final headers = group.rows
-              .expand((row) => row.fields.keys)
-              .toSet()
-              .toList();
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Group title
-              Container(
-                color: Colors.blue[200],
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 12,
-                ),
-                child: Text(
-                  group.basliq,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Table with horizontal scroll
-              // Real Table with horizontal scroll
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Table(
-                  border: TableBorder.all(color: Colors.grey.shade300),
-                  defaultColumnWidth: const IntrinsicColumnWidth(),
-                  children: [
-                    // Header row
-                    TableRow(
-                      decoration: BoxDecoration(color: Colors.blue[100]),
-                      children: headers.map((h) {
-                        return Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Text(
-                            h,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
-                    // Data rows
-                    if (rows.isNotEmpty)
-                      ...rows.map((row) {
-                        return TableRow(
-                          children: headers.map((h) {
-                            final field = row.fields[h];
-                            return Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(
-                                field?.value?.toString() ?? '',
-                                textAlign: TextAlign.center,
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      }),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
   void printReports(ReportController ctrl) async {
     final pdf = pw.Document();
     final font = await loadFont();
@@ -1094,76 +907,78 @@ class HereketPlaniPage extends StatelessWidget {
     return pw.Font.ttf(fontData);
   }
 
-  Widget _buildGridView(ReportController ctrl, BuildContext context) {
-    int crossAxisCount = MediaQuery.of(context).size.width > 600 ? 3 : 2;
-    double childAspectRatio = MediaQuery.of(context).size.width > 600 ? 2 : 1.3;
-    return GridView.builder(
-      // padding: EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: childAspectRatio,
-      ),
-      itemCount: ctrl.filteredReports.length,
-      itemBuilder: (context, index) {
-        final customer = ctrl.filteredReports[index];
-        return InkWell(
-          onTap: () {
-            // Navigate to detail page
-            // Get.to(() => CustomerDetailPage(customer: customer));
-          },
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: MediaQuery.of(context).size.width > 600 ? 40 : 30,
-                    child: Text(customer.name),
-                  ),
-                  const SizedBox(height: 8),
-                  Flexible(
-                    child: Text(
-                      customer.name,
-                      style: TextStyle(
-                        fontSize: MediaQuery.of(context).size.width > 600
-                            ? 18
-                            : 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Flexible(
-                    child: Text(
-                      customer.name,
-                      style: TextStyle(
-                        fontSize: MediaQuery.of(context).size.width > 600
-                            ? 16
-                            : 12,
-                        color: Colors.grey[700],
-                      ),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+  Widget _buildTrinaGrid(HereketPlaniController ctrl) {
+    // Map<String, double> savedColumnWidths = {};
+
+    final visibleColumns = ctrl.columns.where((c) => c['visible']).toList();
+
+    // debugPrint('${visibleColumns.length}');
+    final displayColumns = visibleColumns.isNotEmpty
+        ? visibleColumns
+        : [
+            {'key': 'placeholder', 'label': 'Bosdur', 'visible': true},
+          ];
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ColumnVisibilityMenu(
+              columns: ctrl.columns,
+              onChanged: (String key, bool visible) =>
+                  ctrl.toggleColumnVisibilityExplicit(key, visible),
             ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+        Expanded(
+          child: TrinaGridWidget<HereketResponse>(
+            key: ValueKey(ctrl.columns.map((Map<String, dynamic> c) => c['visible']).join()),
+            data: ctrl.herekets,
+            selectedId: ctrl.selectedId,
+            onSelect: (HereketResponse item) {
+              ctrl.selectHereket(item); // works even if ID column is hidden
+            },
+
+            getId: (p) => p.id,
+            columns: displayColumns,
+            cellBuilder: (p) {
+              final Map<String, TrinaCell> cells = {};
+
+              for (final Map<String, dynamic> c in displayColumns) {
+                // debugPrint(c['key']);
+                switch (c['key']) {
+                  case 'id':
+                    cells['id'] = TrinaCell(value: p.id.toString());
+                    break;
+                  case 'hereket':
+                    cells['hereket'] = TrinaCell(value: p.hereket?.name);
+                    break;
+                  case 'obyekt':
+                    cells['obyekt'] = TrinaCell(value: p.obyekt?.name);
+                    break;
+                  case 'partner':
+                    cells['partner'] = TrinaCell(value: p.partnyor?.ad);
+                    break;
+
+                  case 'percentage':
+                    cells['percentage'] = TrinaCell(value: p.percentage);
+                    break;
+                  case 'note':
+                    cells['note'] = TrinaCell(value: p.note);
+                    break;
+                  default:
+                    cells[c['key']] = TrinaCell(value: '');
+                }
+              }
+
+              return cells;
+            },
           ),
-        ); // return Card(
-        //   child: Center(
-        //     child: ListTile(
-        //       leading: CircleAvatar(child: Text(customer.name[0])),
-        //       title: Text(customer.name),
-        //       subtitle: Text(customer.email),
-        //     ),
-        //   ),
-        // );
-      },
+        ),
+      ],
     );
   }
 }

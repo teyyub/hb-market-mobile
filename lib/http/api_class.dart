@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,13 +16,33 @@ class ApiClient {
 
   Future<http.Response> get(String endpoint) async {
     final token = await _getToken();
-    print('token...${token}');
+    // print('token...${token}');
     final url = Uri.parse('$baseUrl$endpoint');
     final headers = {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
     final response = await http.get(url, headers: headers);
+    return response;
+  }
+
+  Future<http.Response> getWithQuery(
+    String endpoint, {
+    Map<String, String>? queryParams, // optional query parameters
+  }) async {
+    final token = await _getToken();
+
+    debugPrint('getWithQuery...${queryParams}');
+    final uri = queryParams != null
+        ? Uri.parse('$baseUrl$endpoint').replace(queryParameters: queryParams)
+        : Uri.parse('$baseUrl$endpoint');
+
+    final headers = {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+
+    final response = await http.get(uri, headers: headers);
     return response;
   }
 

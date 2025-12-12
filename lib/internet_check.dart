@@ -115,7 +115,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 class InternetBanner extends StatefulWidget {
@@ -221,7 +220,6 @@ class _InternetBannerState extends State<InternetBanner>
     return Stack(
       children: [
         Positioned.fill(child: widget.child),
-
         // Sliding + Pulsing banner
         Positioned(
           top: 0,
@@ -253,10 +251,10 @@ class _InternetBannerState extends State<InternetBanner>
                         ),
                       ],
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.wifi_off, color: Colors.white),
                         SizedBox(width: 10),
                         Text(

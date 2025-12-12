@@ -21,12 +21,12 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isMobile = DeviceUtils.isMobile(context);
+    final bool isMobile = DeviceUtils.isMobile(context);
     final pageContent = GetBuilder<DrawerControllerX>(
       builder: (_) {
         if (controller.selectedPage.isEmpty) {
-          return Center(
-            child: Text('Connected to ', style: const TextStyle(fontSize: 24)),
+          return const Center(
+            child: Text('Connected to ', style: TextStyle(fontSize: 24)),
           );
         }
         switch (controller.selectedPage) {
@@ -45,7 +45,7 @@ class HomePage extends StatelessWidget {
           case 'user-db':
             return DbSelectionPage();
           default:
-            return Center(
+            return const Center(
               child: Text('Welcome ', style: TextStyle(fontSize: 24)),
             );
         }

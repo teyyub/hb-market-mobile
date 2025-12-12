@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hbmarket/main_page.dart';
 import 'package:hbmarket/modules/common/utils/device_utils.dart';
+import 'package:hbmarket/modules/common/widgets/column_visibility_menu.dart';
 import 'package:hbmarket/modules/common/widgets/custom_table.dart';
+import 'package:hbmarket/modules/common/widgets/custom_trina_grid.dart';
 import 'package:hbmarket/modules/login_module/controller/db_selection_controller.dart';
 import 'package:hbmarket/modules/object_module/controller/obyekt_controller.dart';
 import 'package:hbmarket/modules/pul_emeliyyat_module/controller/pul_emeliyyat_controller.dart';
@@ -15,16 +17,16 @@ import 'package:hbmarket/modules/raport_module/models/report_model.dart';
 import 'package:pdf/pdf.dart' show PdfPageFormat, PdfColors;
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:trina_grid/trina_grid.dart';
 
 class PulEmeliyyatPage extends StatelessWidget {
-  final ReportController controller = Get.put(ReportController());
-  final ObyektController obyController = Get.put(ObyektController());
-  final PulEmeliyyatController pulEmeliyyatontroller = Get.put(
-    PulEmeliyyatController(),
-  );
+  final ReportController controller = Get.find<ReportController>();
+  final ObyektController obyController = Get.find<ObyektController>();
+  final PulEmeliyyatController pulEmeliyyatontroller =
+      Get.find<PulEmeliyyatController>();
   @override
   Widget build(BuildContext context) {
-    final isMobile = DeviceUtils.isMobile(context);
+    // final isMobile = DeviceUtils.isMobile(context);
     // return Scaffold(
     //   appBar: AppBar(
     //     title: Text('Pul emeliyyatlari'.tr), // You can replace with your title
@@ -43,32 +45,135 @@ class PulEmeliyyatPage extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              // _buildTopControls(context),
-              // const SizedBox(height: 16),
-              Expanded(
-                child: GetBuilder<PulEmeliyyatController>(
-                  builder: (ctrl) {
-                    return _buildTable2(ctrl);
-                  },
-                ),
-              ),
-            ],
+          child: GetBuilder<PulEmeliyyatController>(
+            builder: (ctrl) {
+              if (ctrl.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Card(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SizedBox(
+                            width: constraints.maxWidth,
+                            height:
+                                constraints.maxHeight, // ensures bounded height
+                            child: _buildTrinaGrid(ctrl),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // _openDialog();
+                    },
+                    child: const Text('Duzelis'),
+                  ),
+                ],
+              );
+            },
           ),
-          // child: GetBuilder<CustomerController>(
-          //   builder: (ctrl) {
-          //     return kIsWeb ? _buildListView(ctrl) : _buildGridView(ctrl);
-          //   },
-          // ),
         ),
       ),
     );
   }
 
+  Widget _buildTrinaGrid(PulEmeliyyatController ctrl) {
+    Map<String, double> savedColumnWidths = {};
+    final visibleColumns = ctrl.columns.where((c) => c['visible']).toList();
+    final displayColumns = visibleColumns.isNotEmpty
+        ? visibleColumns
+        : [
+            {'key': 'placeholder', 'label': 'Bosdur', 'visible': true},
+          ];
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ColumnVisibilityMenu(
+              columns: ctrl.columns,
+              onChanged: (key, visible) =>
+                  ctrl.toggleColumnVisibilityExplicit(key, visible),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+        Expanded(
+          child: CustomTrinaGrid<PulEmeliyyati>(
+            key: ValueKey(ctrl.columns.map((c) => c['visible']).join()),
+            data: ctrl.pulEmeliyyats,
+            selectedId: 1,
+            // onSelect: ctrl.selectPartnyor,
+            onSelect: (id) {
+              // ctrl.selectPartnyor(id); // works even if ID column is hidden
+            },
+
+            getId: (p) => p.id,
+            columns: displayColumns
+                .map(
+                  (c) => TrinaColumn(
+                    title: c['label'],
+                    field: c['key'],
+                    type: TrinaColumnType.text(),
+                    width: savedColumnWidths[c['key']] ?? 150, // default width
+                    enableContextMenu: false,
+                    // filterWidgetDelegate: null,
+                  ),
+                )
+                .toList(),
+            cellBuilder: (p) {
+              final Map<String, TrinaCell> cells = {};
+              cells['id'] = TrinaCell(value: p.id.toString());
+              for (final c in displayColumns) {
+                switch (c['key']) {
+                  case 'id':
+                    cells['id'] = TrinaCell(value: p.id.toString());
+                    break;
+                  case 'mad':
+                    cells['mad'] = TrinaCell(value: p.mad);
+                    break;
+                  case 'mebleg':
+                    cells['mebleg'] = TrinaCell(value: p.mebleg.toString());
+                    break;
+                  case 'kad':
+                    cells['kad'] = TrinaCell(value: p.kad);
+                    break;
+                  // case 'aktiv':
+                  // cells['aktiv'] = TrinaCell(value: p.aktiv);
+                  // break;
+                  // case 'placeholder':
+                  // return DataCell(Text('Bosdur'));
+                  default:
+                    cells[c['key']] = TrinaCell(value: '');
+                }
+              }
+
+              return cells;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTable2(PulEmeliyyatController ctrl) {
     return CustomDataTable<PulEmeliyyati>(
-      data: [],
+      data: ctrl.pulEmeliyyats,
       sortColumnIndex: 0,
       sortAscending: true,
       columns: [
@@ -90,9 +195,9 @@ class PulEmeliyyatPage extends StatelessWidget {
           return DataRow(
             cells: [
               DataCell(Text(k.id.toString())),
-              DataCell(Text(k.partnyor)),
-              DataCell(Text(k.amount.toString())),
-              DataCell(Text(k.kassa)),
+              DataCell(Text(k.mus.toString())),
+              DataCell(Text(k.mebleg.toString())),
+              DataCell(Text(k.kad)),
             ],
           );
         }).toList();

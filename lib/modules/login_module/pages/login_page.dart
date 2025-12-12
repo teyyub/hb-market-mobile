@@ -1,86 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:hbmarket/modules/common/utils/device_utils.dart';
-// import 'package:hbmarket/modules/login_module/controller/login_controller.dart';
-
-// class LoginPage extends StatelessWidget {
-//   LoginPage({super.key});
-
-//   final LoginController controller = Get.put(LoginController());
-
-//   final List<Map<String, String>> languages = [
-//     {'name': 'English', 'code': 'en'},
-//     {'name': 'Azərbaycan', 'code': 'az'},
-//     {'name': 'Русский', 'code': 'ru'},
-//   ];
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final screenWidth = MediaQuery.of(context).size.width;
-//     final maxWidth = screenWidth < 600 ? screenWidth : 400.0;
-
-//     return Scaffold(
-//       body: Center(
-//         child: SingleChildScrollView(
-//           padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-//           child: ConstrainedBox(
-//             constraints: BoxConstraints(maxWidth: maxWidth),
-//             child: GetBuilder<LoginController>(
-//               builder: (_) {
-//                 return Column(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: [
-//                     const FlutterLogo(size: 100),
-//                     const SizedBox(height: 32),
-//                     TextField(
-//                       decoration: InputDecoration(
-//                         labelText: "username".tr,
-//                         border: OutlineInputBorder(),
-//                       ),
-//                       keyboardType: TextInputType.emailAddress,
-//                       onChanged: (value) => controller.email = value,
-//                     ),
-//                     const SizedBox(height: 16),
-//                     TextField(
-//                       decoration: InputDecoration(
-//                         labelText: 'password'.tr,
-//                         border: OutlineInputBorder(),
-//                       ),
-//                       obscureText: true,
-//                       onChanged: (value) => controller.password = value,
-//                     ),
-//                     const SizedBox(height: 24),
-//                     SizedBox(
-//                       width: double.infinity,
-//                       child: ElevatedButton(
-//                         onPressed: controller.isLoading
-//                             ? null
-//                             : controller.login,
-//                         child: controller.isLoading
-//                             ? const CircularProgressIndicator(
-//                                 color: Colors.white,
-//                               )
-//                             : Text('btnLogin'.tr),
-//                       ),
-//                     ),
-//                     const SizedBox(height: 16),
-//                     TextButton(
-//                       onPressed: () {
-//                         Get.snackbar('Info', 'Forgot password tapped');
-//                       },
-//                       child: const Text('Forgot Password?'),
-//                     ),
-//                   ],
-//                 );
-//               },
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -118,9 +35,9 @@ class LoginPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'HB Market',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -132,9 +49,8 @@ class LoginPage extends StatelessWidget {
                     dropdownColor: Colors.white,
                     underline: const SizedBox(),
                     items: languages
-                        .map(
-                          (lang) => DropdownMenuItem(
-                            value: lang['code'],
+                        .map((lang) => DropdownMenuItem(
+                                value: lang['code'],
                             child: Text(lang['name']!),
                           ),
                         )
@@ -159,10 +75,10 @@ class LoginPage extends StatelessWidget {
                     child: Container(
                       color: Colors.blue.shade100,
                       child: Center(
-                        // child: Image.network(
-                        //   'https://via.placeholder.com/300x300.png?text=Logo',
-                        //   width: 250,
-                        // ),
+                        child: Image.network(
+                          'assets/icon.png',
+                          width: 250,
+                        ),
                       ),
                     ),
                   ),
@@ -182,17 +98,69 @@ class LoginPage extends StatelessWidget {
                             return Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                if (isMobile) const FlutterLogo(size: 100),
-                                const SizedBox(height: 32),
-                                TextField(
-                                  controller: controller.usernameController,
-                                  decoration: InputDecoration(
-                                    labelText: "username".tr,
-                                    border: const OutlineInputBorder(),
+                                if (isMobile)
+                                Image.asset(
+                                  'assets/icon.png', // sənin iconun yolu
+                                  width: 100,                  // ölçü FlutterLogo kimi
+                                  height: 100,
+                                ),
+                                const SizedBox(height: 132),
+                                Card(
+                                  elevation: 4,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  child:   Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      children: [
+
+                                        if (controller.isLoading)
+                                          const CircularProgressIndicator()
+                                        else if (controller.deviceMessage != null)
+                                          Text(
+                                            controller.deviceMessage??'',
+                                            style: const TextStyle(
+                                              color: Colors.redAccent,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        if (controller.deviceNote != null)
+                                          const SizedBox(height: 6,),
+                                          Text(
+                                            controller.deviceNote??'',
+                                            style: const TextStyle(
+                                              color: Colors.black87,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                  keyboardType: TextInputType.emailAddress,
+                                ),
+                                const SizedBox(height: 12,),
+                                TextField(
+                                  controller: controller.deviceController,
+                                  readOnly:true,
+                                  decoration: InputDecoration(
+                                    labelText: "Kod".tr,
+                                    border: const OutlineInputBorder(),
+                                    suffixIcon: IconButton(
+                                      icon: const Icon(Icons.copy),
+                                      onPressed: () {
+                                        // Clipboard-a text kopyalamaq
+                                        Clipboard.setData(
+                                          ClipboardData(text: controller.deviceController.text),
+                                        );
+                                        // İstəyə görə toast/snackbar ilə mesaj göstərə bilərsən
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Kopyalandı')),
+                                        );
+                                      },
+                                    ),
+                                  ),
+
+
                                   onChanged: (value) =>
-                                      controller.username = value,
+                                  controller.deviceId = int.parse(value),
                                 ),
                                 const SizedBox(height: 16),
                                 TextField(
@@ -202,6 +170,7 @@ class LoginPage extends StatelessWidget {
                                     border: const OutlineInputBorder(),
                                   ),
                                   obscureText: true,
+                                  // readOnly: !controller.isPasswordEnabled,
                                   onChanged: (value) =>
                                       controller.password = value,
                                 ),
@@ -209,9 +178,7 @@ class LoginPage extends StatelessWidget {
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
-                                    onPressed: controller.isLoading
-                                        ? null
-                                        : controller.login,
+                                    onPressed:controller.loginV3,
                                     child: controller.isLoading
                                         ? const CircularProgressIndicator(
                                             color: Colors.white,
@@ -221,64 +188,71 @@ class LoginPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 16),
                                 TextButton(
-                                  onPressed: () {
-                                    controller.saveUser();
+                                  onPressed: () async {
+                                   await controller.saveDevice();
                                   },
                                   child: const Text('Yadda saxla'),
                                 ),
                                 const SizedBox(height: 24),
+                                Text('Versiya: ${controller.appVersion.split('+')[0]}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold, // ✅ Bold etmək üçün
+                                    fontSize: 16,                // opsional: ölçü təyin edə bilərsən
+                                  ),),
+
+                                const SizedBox(height: 24),
                                 // ✅ Device ID display section
-                                if (controller.deviceId != 0)
-                                  Column(
-                                    children: [
-                                      Text(
-                                        'Device ID:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.grey.shade700,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: SelectableText(
-                                              controller.deviceId.toString(),
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.copy,
-                                              size: 20,
-                                              color: Colors.blueGrey,
-                                            ),
-                                            tooltip: "Copy",
-                                            onPressed: () {
-                                              Clipboard.setData(
-                                                ClipboardData(
-                                                  text: controller.deviceId
-                                                      .toString(),
-                                                ),
-                                              );
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                    "Copied to clipboard",
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                // if (controller.deviceId != 0)
+                                //   Column(
+                                //     children: [
+                                //       Text(
+                                //         'Device ID:',
+                                //         style: TextStyle(
+                                //           fontWeight: FontWeight.bold,
+                                //           color: Colors.grey.shade700,
+                                //         ),
+                                //       ),
+                                //       const SizedBox(height: 4),
+                                //       Row(
+                                //         children: [
+                                //           Expanded(
+                                //             child: SelectableText(
+                                //               controller.deviceId.toString(),
+                                //               style: const TextStyle(
+                                //                 fontSize: 16,
+                                //                 color: Colors.black87,
+                                //               ),
+                                //             ),
+                                //           ),
+                                //           IconButton(
+                                //             icon: const Icon(
+                                //               Icons.copy,
+                                //               size: 20,
+                                //               color: Colors.blueGrey,
+                                //             ),
+                                //             tooltip: "Copy",
+                                //             onPressed: () {
+                                //               Clipboard.setData(
+                                //                 ClipboardData(
+                                //                   text: controller.deviceId
+                                //                       .toString(),
+                                //                 ),
+                                //               );
+                                //               ScaffoldMessenger.of(
+                                //                 context,
+                                //               ).showSnackBar(
+                                //                 const SnackBar(
+                                //                   content: Text(
+                                //                     "Copied to clipboard",
+                                //                   ),
+                                //                 ),
+                                //               );
+                                //             },
+                                //           ),
+                                //         ],
+                                //       ),
+                                //     ],
+                                //   ),
                               ],
                             );
                           },
@@ -288,23 +262,6 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
 
-                // Right side design for web
-                // if (!isMobile)
-                //   Expanded(
-                //     child: Container(
-                //       color: Colors.blue.shade50,
-                //       child: Center(
-                //         child: Text(
-                //           'Welcome!\nPlease login to continue',
-                //           textAlign: TextAlign.center,
-                //           style: TextStyle(
-                //             fontSize: 22,
-                //             color: Colors.blue.shade900,
-                //           ),
-                //         ),
-                //       ),
-                //     ),
-                //   ),
               ],
             ),
           ),

@@ -1,0 +1,17 @@
+partnyor da axtaris dropdownda orde by ad
+save edende table пщкыутышт
+
+mal yoxlanisinda tel klaviaturasi gelmesin
+ focus itende axtarisda klaviatura gizlesnin
+
+
+ is sehifesinda save eden barkodu ve ya digerini yadda saxlasin
+
+ alis gorsenmir qiymet kimi
+
+
+ enter ok olsun add ucun
+
+ login de
+ is de barkod da default klaviatura gelmesin
+ check config

@@ -1,44 +1,103 @@
+import 'package:decimal/decimal.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hbmarket/config/customer_list.dart';
-import 'package:hbmarket/modules/baza_duzelt_module/models/say_duzelt.dart';
-import 'package:hbmarket/modules/customer_module/models/customer_model.dart';
-import 'package:hbmarket/modules/pul_emeliyyat_module/models/pul_emeliyyati_model.dart';
-import 'package:hbmarket/modules/pul_transfer_module/models/pul_tranfer_model.dart';
-import 'package:hbmarket/modules/xerc_qazanc_module/models/xerc_qazanc_model.dart';
+import 'package:hbmarket/http/api_class.dart';
+import 'package:hbmarket/modules/baza_duzelt_module/models/say_duzelt_request.dart';
+import 'package:hbmarket/modules/baza_duzelt_module/service/say_duzelt_service.dart';
+import 'package:hbmarket/modules/login_module/controller/db_selection_controller.dart';
 
 class SayDuzeltController extends GetxController {
-  List<SayDuzelt> customers = [];
-  String searchQuery = '';
+  TextEditingController txtController = TextEditingController();
+  final TextEditingController barcodeController = TextEditingController();
+  TextEditingController idController = TextEditingController();
+  // SayDuzeltController ctrl = Get.find<SayDuzeltController>();
+  TextEditingController? activeController;
 
+  late final SayDuzeltService service;
+  FocusNode idFocus = FocusNode();
+  FocusNode barcodeFocus = FocusNode();
+  FocusNode txtFocus = FocusNode();
   @override
   void onInit() {
     super.onInit();
-    // customers = List.from(fakeCustomers); // load initial data
+    service = SayDuzeltService(client: ApiClient());
+    idFocus.addListener(() {
+      if (idFocus.hasFocus) activeController = idController;
+    });
+    barcodeFocus.addListener(() {
+      if (barcodeFocus.hasFocus) activeController = barcodeController;
+    });
+    txtFocus.addListener(() {
+      if (txtFocus.hasFocus) activeController = txtController;
+    });
   }
 
-  // List<XercQazanc> get filteredCustomers {
-  // if (searchQuery.isEmpty) return customers;
-  // return customers
-  //     .where(
-  //       (c) =>
-  //           c.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-  //           c.email.toLowerCase().contains(searchQuery.toLowerCase()),
-  //     )
-  //     .toList();
-  // }
-
-  // void addCustomer(XercQazanc customer) {
-  //   customers.add(customer);
-  //   update();
-  // }
-
-  void removeCustomer(int index) {
-    customers.removeAt(index);
-    update();
+  @override
+  void onClose() {
+    txtController.dispose();
+    barcodeController.dispose();
+    idController.dispose();
+    idFocus.dispose();
+    barcodeFocus.dispose();
+    txtFocus.dispose();
+    super.onClose();
   }
 
-  void setSearchQuery(String query) {
-    searchQuery = query;
-    update();
+  Future<int?> qaliq(SayDuzeltRequest dto) async {
+    final dbId = DbSelectionController.to.getDbId;
+    try {
+      print('dbId.... ${dbId}');
+      print('qaliq.... ${dto.toJson()}');
+
+      // Example: call your backend API
+      // int res = await service.xercYeni(dbId, mustId, kassaId, amount, tip);
+      final result = await service.qaliq(dbId, dto);
+      final cavab = result['cavab'] ?? '';
+      final miqdar = result['miqdar'];
+      if (miqdar == null) {
+        // Show message when no quantity
+        Get.snackbar('Məlumat', cavab.isNotEmpty ? cavab : 'Miqdar tapılmadı');
+        txtController.text = '';
+      } else {
+        // Show success with quantity
+        // Get.snackbar('Uğurlu', 'Miqdar: $miqdar');
+        txtController.text = miqdar.toString();
+        txtController.selection = TextSelection.fromPosition(
+          TextPosition(offset: txtController.text.length),
+        );
+      }
+      update();
+      return miqdar;
+
+      // Get.snackbar('Success', 'Yeni xerc ugurla yadda saxlanildi!');
+
+      // Update local list if needed
+    } catch (e) {
+      Get.snackbar('Xəta', 'API çağırışı zamanı xəta: $e');
+      return null;
+    }
+  }
+
+  Future<void> duzelt(SayDuzeltRequest dto) async {
+    final dbId = DbSelectionController.to.getDbId;
+    try {
+      print('dbId.... ${dbId}');
+      print('sayRequest.... ${dto.toJson()}');
+
+      // Example: call your backend API
+      // int res = await service.xercYeni(dbId, mustId, kassaId, amount, tip);
+      final response = await service.duzelt(dbId, dto);
+      final cavab = response['cavab'] as String?;
+      if (cavab != null && cavab.toLowerCase() == 'ok') {
+        // Optional: update your local list / UI
+        update();
+
+        Get.snackbar('Success', 'Ugurla yadda saxlanildi!');
+      } else {
+        Get.snackbar('Error', cavab ?? 'Unknown error from server');
+      }
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    }
   }
 }

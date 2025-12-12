@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:hbmarket/http/api_class.dart';
 import 'package:hbmarket/modules/temizlenme_module/models/temizle_model.dart';
 import 'package:hbmarket/modules/yonlendirme_module/models/yonlendirme_model.dart';
@@ -46,6 +47,20 @@ class YonlendirmeService {
       throw Exception('Failed to update yonlendirme');
     }
   }
+
+  Future<void> updateYonlendirmeV1(int dbId, YonlendirmeDto dto) async {
+    debugPrint('${dbId}');
+    debugPrint('${dto.toJson()}');
+    final response = await client.put(
+      '/api/v1/yonlendirme?dbKey=$dbId',
+      body: dto.toJson(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update yonlendirme');
+    }
+  }
+
 
   Future<void> updateKecidOk(int id, bool val) async {
     final response = await client.put(

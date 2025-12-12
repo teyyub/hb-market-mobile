@@ -23,7 +23,7 @@ class ObyektController extends GetxController {
     fetchObyekts();
   }
 
-  void fetchObyekts() async {
+  Future<void> fetchObyekts() async {
     try {
       print('fetched object...');
 

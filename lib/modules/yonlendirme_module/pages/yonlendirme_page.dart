@@ -14,7 +14,7 @@ class YonlendirmePage extends StatelessWidget {
         // return Scaffold(
         // appBar: AppBar(title: Text('Yonlendirme')),
         return MainLayout(
-          title: 'Yonlendirme',
+          title: 'Yönləndirmə',
           body: controller.isLoading
               ? Center(child: CircularProgressIndicator())
               : ListView.builder(
@@ -23,7 +23,7 @@ class YonlendirmePage extends StatelessWidget {
                     final item = controller.yonlendirmeList[index];
                     return ListTile(
                       title: Text(
-                        item.kecidOk! ? 'Yonlendirilib' : 'Yonendirilmeyib',
+                        item.kecidOk! ? 'Yönləndirilib' : 'Yönləndirilməyib',
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,

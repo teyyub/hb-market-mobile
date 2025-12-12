@@ -4,37 +4,38 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hbmarket/config/customer_list.dart';
 import 'package:hbmarket/main_page.dart';
+import 'package:hbmarket/modules/common/widgets/column_visibility_menu.dart';
+
 import 'package:hbmarket/modules/common/widgets/custom_table.dart';
+import 'package:hbmarket/modules/common/widgets/trina_grid_widget.dart';
 import 'package:hbmarket/modules/customer_module/controller/customer_controller.dart';
 import 'package:hbmarket/modules/customer_module/pages/customer_detail_page.dart';
+import 'package:hbmarket/modules/hereket_module/models/hereket_reponse.dart';
 import 'package:hbmarket/modules/kassa_module/controller/kassa_controller.dart';
 import 'package:hbmarket/modules/kassa_module/models/kassa_model.dart';
+import 'package:hbmarket/modules/kassa_module/widgets/FilterKassa.dart';
+import 'package:trina_grid/trina_grid.dart';
 
 class KassaPage extends StatelessWidget {
-  final KassaController controller = Get.put(KassaController());
+  final KassaController controller = Get.find<KassaController>();
 
   @override
   Widget build(BuildContext context) {
-    // return Scaffold(
-    //   appBar: AppBar(
-    //     title: Text('Kassa'.tr), // You can replace with your title
-    //     centerTitle: true,
-    //   ),
     return MainLayout(
-      title: 'Kassa'.tr,
+      title: 'Kassalar'.tr,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _buildProcedureButton(),
-              const SizedBox(height: 16),
-              _buildSearchField(),
-              const SizedBox(height: 16),
               Expanded(
                 child: GetBuilder<KassaController>(
-                  builder: (ctrl) {
-                    return _buildTable2(ctrl);
+                  builder: (KassaController ctrl) {
+                    if (ctrl.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    // return _buildTable2(ctrl);
+                    return _buildTrinaGrid(ctrl);
                     // return kIsWeb
                     //     ? _buildTable2(ctrl)
                     //     : _buildGridView(ctrl, context);
@@ -83,7 +84,7 @@ class KassaPage extends StatelessWidget {
               DataCell(Text(k.id.toString())),
               DataCell(Text(k.ad)),
               DataCell(Text(k.money.toString())),
-              DataCell(Text(k.aktiv)),
+              DataCell(Text(k.aktiv!)),
             ],
           );
         }).toList();
@@ -332,4 +333,134 @@ class _SortIcon extends StatelessWidget {
       color: active ? Colors.cyan : null,
     );
   }
+}
+
+Widget _buildTrinaGrid(KassaController ctrl) {
+  // Map<String, double> savedColumnWidths = {};
+  final visibleColumns = ctrl.columns.where((c) => c['visible']).toList();
+  final displayColumns = visibleColumns.isNotEmpty
+      ? visibleColumns
+      : [
+          {'key': 'placeholder', 'label': 'Bosdur', 'visible': true},
+        ];
+
+  return Column(
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.filter_list), // Filter ikonu
+            tooltip: 'Filterlər'.tr, // Tooltip əlavə edirik
+            onPressed: () async {
+              Get.bottomSheet(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Başlıq və close düyməsi
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Filter'.tr,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Get.back(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Sənin FilterKassa widget-ın burada yerləşəcək
+                      FilterKassa(
+                        onSave: (String? name, String? aktiv) {
+                          ctrl.applyFilter(name);
+                          // ctrl.fetchKassa(nameFilter: name);
+                          // Get.back(); // bottom sheet-i bağlayır
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent, // artıq Container rəngini istifadə edirik
+              );
+
+
+            },
+          ),
+          // const SizedBox(width: 8),
+          if (ctrl.isFiltered)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              tooltip: 'Sıfırla',
+              onPressed: () => ctrl.resetFilter(),
+
+            ),
+          const SizedBox(width: 8), // İkonlar arasında bir az boşluq
+          ColumnVisibilityMenu(
+            columns: ctrl.columns,
+            onChanged: (String key, bool visible) =>
+                ctrl.toggleColumnVisibilityExplicit(key, visible),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      Expanded(
+        child: TrinaGridWidget<Kassa>(
+          key: ValueKey(ctrl.columns.map((c) => c['visible']).join()),
+          data: ctrl.kassa,
+          selectedId: ctrl.selectedId,
+          // onSelect: ctrl.selectPartnyor,
+          onSelect: (item) {
+            ctrl.setSelectedKassa(item); // works even if ID column is hidden
+          },
+          onColumnVisibilityChanged: (key, visible) {
+            ctrl.toggleColumnVisibilityExplicit(key, visible);
+          },
+          getId: (p) => p.id,
+          columns: displayColumns,
+          cellBuilder: (p) {
+            final Map<String, TrinaCell> cells = {};
+
+            // cells['id'] = TrinaCell(value: p.id.toString());
+            for (final c in displayColumns) {
+              switch (c['key']) {
+                case 'id':
+                  cells['id'] = TrinaCell(value: p.id.toString());
+                  break;
+                case 'name':
+                  cells['name'] = TrinaCell(value: p.ad);
+                  break;
+                case 'money':
+                  cells['money'] = TrinaCell(value: p.money);
+                  break;
+                case 'active':
+                  cells['active'] = TrinaCell(value: p.aktiv);
+                  break;
+
+                default:
+                  cells[c['key']] = TrinaCell(value: '');
+              }
+            }
+
+            return cells;
+          },
+        ),
+      ),
+    ],
+  );
 }

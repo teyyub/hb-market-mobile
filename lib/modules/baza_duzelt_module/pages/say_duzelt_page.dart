@@ -1,178 +1,37 @@
-import 'package:data_table_2/data_table_2.dart';
-import 'package:flutter/foundation.dart';
+import 'package:decimal/decimal.dart';
+import 'package:expressions/expressions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hbmarket/main_page.dart';
 import 'package:hbmarket/modules/baza_duzelt_module/controller/say_duzelt_controller.dart';
-import 'package:hbmarket/modules/baza_duzelt_module/models/say_duzelt.dart';
-import 'package:hbmarket/modules/common/utils/device_utils.dart';
-import 'package:hbmarket/modules/common/widgets/custom_table.dart';
-import 'package:hbmarket/modules/login_module/controller/db_selection_controller.dart';
+import 'package:hbmarket/modules/baza_duzelt_module/models/say_duzelt_request.dart';
+import 'package:hbmarket/modules/baza_duzelt_module/pages/keyboard.dart';
+
 import 'package:hbmarket/modules/object_module/controller/obyekt_controller.dart';
+import 'package:hbmarket/modules/partnyor_module/pages/barcode_scanner_page.dart';
 import 'package:hbmarket/modules/raport_module/controller/report_controller.dart';
-import 'package:hbmarket/modules/raport_module/models/report_model.dart';
-import 'package:pdf/pdf.dart' show PdfPageFormat, PdfColors;
-import 'package:printing/printing.dart';
-import 'package:pdf/widgets.dart' as pw;
 
 class SayDuzeltPage extends StatelessWidget {
-  final ReportController controller = Get.put(ReportController());
-  final ObyektController obyController = Get.put(ObyektController());
+  final ReportController controller = Get.find<ReportController>();
+  final ObyektController obyController = Get.find<ObyektController>();
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = DeviceUtils.isMobile(context);
-    // return Scaffold(
-    //   appBar: AppBar(
-    //     title: Text('say duzelt'.tr), // You can replace with your title
-    //     centerTitle: true,
-    //     actions: [
-    //       IconButton(
-    //         icon: Icon(Icons.refresh),
-    //         onPressed: () {
-    //           // Optional: trigger refresh
-    //         },
-    //       ),
-    //     ],
-    //   ),
     return MainLayout(
       title: 'sayduzelt'.tr,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              // _buildTopControls(context),
-              // const SizedBox(height: 16),
-              Expanded(
-                child: GetBuilder<SayDuzeltController>(
-                  builder: (ctrl) {
-                    return _buildTable2(ctrl);
-                  },
-                ),
-              ),
-            ],
-          ),
-          // child: GetBuilder<CustomerController>(
-          //   builder: (ctrl) {
-          //     return kIsWeb ? _buildListView(ctrl) : _buildGridView(ctrl);
-          //   },
-          // ),
+          padding: const EdgeInsets.all(2),
+          child: Column(children: [_buildTopControls(context)]),
         ),
       ),
     );
   }
 
-  Widget _buildTable2(SayDuzeltController ctrl) {
-    return CustomDataTable<SayDuzelt>(
-      data: [],
-      sortColumnIndex: 0,
-      sortAscending: true,
-      columns: [
-        DataColumn2(
-          label: Text('No'),
-          // onSort: (colIndex, asc) => ctrl.sort<num>((k) => k.id, colIndex, asc),
-        ),
-        DataColumn(
-          label: Text('Ad'),
-          // onSort: (colIndex, asc) =>
-          //     ctrl.sort<String>((k) => k.ad, colIndex, asc),
-        ),
-        DataColumn(label: Text('Aktiv')),
-      ],
-      rowBuilder: (data) {
-        return data.map((k) {
-          return DataRow(
-            cells: [
-              DataCell(Text(k.id.toString())),
-              DataCell(Text(k.name)),
-              DataCell(Text(k.aktiv)),
-            ],
-          );
-        }).toList();
-      },
-    );
-  }
-
-  Widget _buildMobileListView(ReportController ctrl, BuildContext context) {
-    if (ctrl.reportItems.isEmpty) {
-      return Center(child: Text("notFound".tr));
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: ctrl.reportItems.length,
-      itemBuilder: (context, index) {
-        final group = ctrl.reportItems[index];
-        final rows = group.rows ?? [];
-        if (rows.isEmpty) return const SizedBox.shrink();
-        final headers = rows.expand((row) => row.fields.keys).toSet().toList();
-
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: ExpansionTile(
-            title: Text(
-              group.basliq,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Table(
-                  border: TableBorder.all(color: Colors.grey.shade300),
-                  defaultColumnWidth: const IntrinsicColumnWidth(),
-                  children: [
-                    // Header row
-                    TableRow(
-                      decoration: BoxDecoration(color: Colors.blue[100]),
-                      children: headers.map((h) {
-                        return Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: Text(
-                            h,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    // Data rows
-                    ...rows.map((row) {
-                      return TableRow(
-                        children: headers.map((h) {
-                          final field = row.fields[h];
-                          return Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Text(
-                              field?.value?.toString() ?? '',
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildTopControls(BuildContext context) {
-    // final isMobile = MediaQuery.of(context).size.width < 600;
-    final isMobile = DeviceUtils.isMobile(context);
-    return GetBuilder<ReportController>(
-      builder: (ctrl) {
+    return GetBuilder<SayDuzeltController>(
+      builder: (SayDuzeltController ctrl) {
         return Card(
           color: Colors.blue[50],
           elevation: 2,
@@ -181,115 +40,277 @@ class SayDuzeltPage extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: isMobile
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => _openFooDialog(context),
-                        child: Text("selectObject".tr),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildTimeSelectors(context),
-                      const SizedBox(height: 12),
-                      _buildReportIdSelector(),
-                      const SizedBox(height: 12),
+            child: SingleChildScrollView(
 
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          SizedBox(
-                            width: isMobile ? double.infinity : 160,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              icon: const Icon(Icons.download),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text('btnFetchReport'.tr),
-                              ),
-                              onPressed: () {
-                                ctrl.fetchReportPrint();
-                              },
-                            ),
-                          ),
-                          // const SizedBox(width: 12),
-                          SizedBox(
-                            width: isMobile ? double.infinity : 160,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              icon: const Icon(Icons.print),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  "btnPrint".tr,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-
-                              onPressed: () => printReports(controller),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => _openFooDialog(context),
-                              child: const Text("Select Obyekt"),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildTimeSelectors(context),
-                            const SizedBox(height: 12),
-                            _buildReportIdSelector(),
-                            const SizedBox(height: 12),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.download),
-                            label: Text("btnFetchReport".tr),
-                            onPressed: () {
-                              ctrl.fetchReportPrint();
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.print),
-                            label: Text("btnPrint".tr),
-                            onPressed: () => printReports(controller),
-                          ),
-                        ],
-                      ),
-                    ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildIdRow(ctrl),
+                  const SizedBox(height: 10),
+                  _buildBarcodeRow(ctrl),
+                  const SizedBox(height: 10),
+                  _buildBarcodeButtonRow(ctrl),
+                  const SizedBox(height: 10),
+                  _buildCalcRow(context, ctrl),
+                  const SizedBox(height: 10),
+                  _buildOkRow(context, ctrl),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 400, // or whatever height you want for your keyboard
+                    child: _buildKeyboard(context, ctrl),
                   ),
+                  // _buildKeyboard(context, ctrl),
+                  // Expanded(child: _buildKeyboard(context, ctrl)),
+                ],
+              ),
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildIdRow(SayDuzeltController ctrl) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: ctrl.idController,
+            focusNode: ctrl.idFocus,
+            keyboardType: TextInputType.none,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              hintText: 'hereket',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: () => _focusAndSelectAll(ctrl.idController, ctrl.idFocus),
+          child: const Text("Hərəkət"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBarcodeRow(SayDuzeltController ctrl) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: ctrl.barcodeController,
+            focusNode: ctrl.barcodeFocus,
+            decoration: InputDecoration(
+              hintText: 'Barkod',
+              border: const OutlineInputBorder(),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 12,
+              ),
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.qr_code_scanner),
+                    onPressed: () async {
+                      final code = await Get.to(
+                        () => const BarcodeScannerPage(),
+                      );
+                      if (code != null) {
+                        ctrl.barcodeController.text = code;
+                        _searchBarcode(ctrl);
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () {
+                      _searchBarcode(ctrl);
+                      // Future.delayed(const Duration(milliseconds: 100), () {
+                      //   _focusAndSelectAll(ctrl.txtController, ctrl.txtFocus);
+                      // });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBarcodeButtonRow(SayDuzeltController ctrl) {
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 38,
+            child: ElevatedButton(
+              onPressed: () {
+                _focusAndSelectAll(ctrl.barcodeController, ctrl.barcodeFocus);
+                ctrl.txtController.clear();
+              },
+              child: const FittedBox(child: Text("Barkod")),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCalcRow(BuildContext context, SayDuzeltController ctrl) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 36,
+            child: TextField(
+              controller: ctrl.txtController,
+              focusNode: ctrl.txtFocus,
+              keyboardType: TextInputType.none,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                isDense: true, // makes input smaller vertically
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
+              ),
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 1,
+          child: SizedBox(
+            height: 36,
+            child: ElevatedButton(
+              onPressed: () {
+                ctrl.txtController.text = calculateExpression(
+                  ctrl.txtController.text,
+                ).toString();
+                // try {
+                //   final expression = Expression.parse(ctrl.txtController.text);
+                //   final evaluator = const ExpressionEvaluator();
+                //   final result = evaluator.eval(expression, {});
+                //   ctrl.txtController.text = result.toString();
+                // } catch (_) {
+                //   ctrl.txtController.text = '0';
+                // }
+              },
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text("Calc"),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 1,
+          child: SizedBox(
+            height: 36,
+            child: ElevatedButton(
+              onPressed: () {
+                final value = calculateExpression(ctrl.txtController.text);
+                final dto = SayDuzeltRequest(
+                  id: int.tryParse(ctrl.idController.text) ?? 0,
+                  barcode: ctrl.barcodeController.text.trim(),
+                  remain: value,
+                );
+                ctrl.duzelt(dto);
+                ctrl.txtController.clear();
+                ctrl.barcodeController.clear();
+                FocusScope.of(context).requestFocus(ctrl.barcodeFocus);
+              },
+              child: const FittedBox(fit: BoxFit.scaleDown, child: Text("OK")),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOkRow(BuildContext context, SayDuzeltController ctrl) {
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 40,
+            child: ElevatedButton(
+              onPressed: () {
+                final dto = SayDuzeltRequest(
+                  id: int.tryParse(ctrl.idController.text) ?? 0,
+                  barcode: ctrl.barcodeController.text.trim(),
+                  remain: Decimal.tryParse(ctrl.txtController.text.trim()),
+                );
+                ctrl.duzelt(dto);
+                ctrl.txtController.clear();
+                ctrl.barcodeController.clear();
+                FocusScope.of(context).requestFocus(ctrl.barcodeFocus);
+              },
+              child: const Text("OK"),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKeyboard(BuildContext context, SayDuzeltController ctrl) {
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      child: NumberSymbolKeyboard(
+        onKeyPressed: (String key) {
+          final controller = ctrl.activeController;
+          if (controller == null) return;
+
+          final text = controller.text;
+          final selection = controller.selection;
+          final start = selection.start >= 0 ? selection.start : text.length;
+          final end = selection.end >= 0 ? selection.end : text.length;
+
+          switch (key) {
+            case '⌫':
+              if (start != end) {
+                controller.text = text.replaceRange(start, end, '');
+                controller.selection = TextSelection.fromPosition(
+                  TextPosition(offset: start),
+                );
+              } else if (start > 0) {
+                final newStart = start - 1;
+                controller.text = text.replaceRange(newStart, start, '');
+                controller.selection = TextSelection.fromPosition(
+                  TextPosition(offset: newStart),
+                );
+              }
+              break;
+            case '✖':
+              controller.clear();
+              break;
+            case '⏎':
+              _searchBarcode(ctrl);
+              break;
+            default:
+              if (controller == ctrl.idController &&
+                  !RegExp(r'\d').hasMatch(key))
+                return;
+
+              final newText = text.replaceRange(start, end, key);
+              controller.text = newText;
+              controller.selection = TextSelection.fromPosition(
+                TextPosition(offset: start + key.length),
+              );
+          }
+        },
+      ),
     );
   }
 
@@ -316,7 +337,7 @@ class SayDuzeltPage extends StatelessWidget {
                 ),
                 child: Text(
                   "selectObject".tr,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -325,7 +346,7 @@ class SayDuzeltPage extends StatelessWidget {
               ), // Body
               Expanded(
                 child: GetBuilder<ObyektController>(
-                  builder: (ctrl) {
+                  builder: (ObyektController ctrl) {
                     if (ctrl.obyekts.isEmpty) {
                       return const Center(child: CircularProgressIndicator());
                     }
@@ -333,7 +354,7 @@ class SayDuzeltPage extends StatelessWidget {
                     return ListView.separated(
                       itemCount: ctrl.obyekts.length,
                       separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
+                      itemBuilder: (BuildContext context, int index) {
                         final foo = ctrl.obyekts[index];
                         return ListTile(
                           leading: const Icon(Icons.store, color: Colors.blue),
@@ -411,7 +432,7 @@ class SayDuzeltPage extends StatelessWidget {
                         child: ListView.separated(
                           itemCount: ctrl.obyekts.length,
                           separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (context, index) {
+                          itemBuilder: (BuildContext context, int index) {
                             final foo = ctrl.obyekts[index];
                             return ListTile(
                               leading: const Icon(
@@ -595,563 +616,47 @@ class SayDuzeltPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchField() {
-    return TextField(
-      decoration: InputDecoration(
-        labelText: 'Search customers',
-        prefixIcon: Icon(Icons.search),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      onChanged: (value) {
-        // controller.setSearchQuery(value); // Filter logic in controller
-      },
-    );
-  }
-
-  Widget _buildReportIdSelector() {
-    return GetBuilder<ReportController>(
-      builder: (ctrl) {
-        return DropdownButtonFormField<Report>(
-          decoration: InputDecoration(
-            labelText: "selectReport".tr,
-            border: OutlineInputBorder(),
-          ),
-          value: ctrl.selectedReport,
-          items: ctrl.reports.map((report) {
-            return DropdownMenuItem(
-              value: report,
-              child: Text("${report.name}"),
-            );
-          }).toList(),
-          onChanged: (value) {
-            if (value != null) ctrl.setSelectedReport(value);
-          },
-        );
-      },
-    );
-  }
-
-  // Widget _buildListView(ReportController ctrl) {
-  //   final items = ctrl.reportItems;
-  //   return ListView.separated(
-  //     // padding: EdgeInsets.all(16),
-  //     itemCount: ctrl.reportItems.length,
-  //     separatorBuilder: (_, __) => SizedBox(height: 8),
-  //     itemBuilder: (context, index) {
-  //       final dto = ctrl.reportItems[index];
-  //       return Card(
-  //         margin: EdgeInsets.symmetric(vertical: 8),
-  //         child: Padding(
-  //           padding: const EdgeInsets.all(8.0),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.stretch,
-  //             children: dto.fields.entries.map((entry) {
-  //               final field = entry.value;
-
-  //               // Determine text alignment
-  //               TextAlign textAlign = TextAlign.left;
-  //               if (field.alignment == 'right')
-  //                 textAlign = TextAlign.right;
-  //               else if (field.alignment == 'center')
-  //                 textAlign = TextAlign.center;
-
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(vertical: 2),
-  //                 child: Text(
-  //                   '${entry.key}: ${field.value}',
-  //                   textAlign: textAlign,
-  //                   style: const TextStyle(fontSize: 16),
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
-  // Widget _buildListView(ReportController ctrl) {
-  //   return ListView.separated(
-  //     itemCount: ctrl.reportItems.length,
-  //     separatorBuilder: (_, __) => const SizedBox(height: 8),
-  //     itemBuilder: (context, index) {
-  //       final dto = ctrl.reportItems[index];
-  //       return Card(
-  //         margin: const EdgeInsets.symmetric(vertical: 8),
-  //         child: Padding(
-  //           padding: const EdgeInsets.all(8.0),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.stretch,
-  //             children: dto.fields.entries.map((entry) {
-  //               final field = entry.value;
-  //               return Padding(
-  //                 padding: const EdgeInsets.symmetric(vertical: 2),
-  //                 child: Row(
-  //                   mainAxisAlignment: field.alignment == 'right'
-  //                       ? MainAxisAlignment.end
-  //                       : field.alignment == 'center'
-  //                       ? MainAxisAlignment.center
-  //                       : MainAxisAlignment.start,
-  //                   children: [
-  //                     Text(
-  //                       '${entry.key}: ',
-  //                       style: const TextStyle(
-  //                         fontWeight: FontWeight.bold,
-  //                         fontSize: 16,
-  //                       ),
-  //                     ),
-  //                     Text(
-  //                       '${field.value}',
-  //                       style: const TextStyle(fontSize: 16),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-  // Widget _buildListView(ReportController ctrl) {
-  //   if (ctrl.reportItems.isEmpty) {
-  //     return const Center(child: Text("No results found"));
-  //   }
-
-  //   return SingleChildScrollView(
-  //     scrollDirection: Axis.vertical,
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.stretch,
-  //       children: ctrl.reportItems.map((group) {
-  //         final headers = group.rows
-  //             .expand((row) => row.fields.keys)
-  //             .toSet()
-  //             .toList();
-
-  //         return Column(
-  //           crossAxisAlignment: CrossAxisAlignment.stretch,
-  //           children: [
-  //             // Group title
-  //             Container(
-  //               color: Colors.blue[200],
-  //               padding: const EdgeInsets.all(8),
-  //               child: Text(
-  //                 group.basliq,
-  //                 style: const TextStyle(
-  //                   fontSize: 18,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ),
-  //             // Table header
-  //             Container(
-  //               color: Colors.blue[100],
-  //               child: Row(
-  //                 children: headers.map((h) {
-  //                   return Container(
-  //                     width: 120, // same as row cells
-  //                     padding: const EdgeInsets.all(8.0),
-  //                     decoration: BoxDecoration(
-  //                       border: Border(
-  //                         bottom: BorderSide(color: Colors.grey.shade300),
-  //                         right: BorderSide(color: Colors.grey.shade300),
-  //                       ),
-  //                     ),
-  //                     child: Text(
-  //                       h,
-  //                       textAlign: TextAlign.center,
-  //                       style: const TextStyle(fontWeight: FontWeight.bold),
-  //                     ),
-  //                   );
-  //                 }).toList(),
-  //               ),
-  //             ),
-  //             // Table rows
-  //             SingleChildScrollView(
-  //               scrollDirection: Axis.horizontal,
-  //               child: Column(
-  //                 children: group.rows.map((row) {
-  //                   return Row(
-  //                     children: headers.map((h) {
-  //                       final field = row.fields[h];
-  //                       return Container(
-  //                         width: 120, // fixed width for better alignment
-  //                         padding: const EdgeInsets.all(8),
-  //                         decoration: BoxDecoration(
-  //                           border: Border(
-  //                             bottom: BorderSide(color: Colors.grey.shade300),
-  //                             right: BorderSide(color: Colors.grey.shade300),
-  //                           ),
-  //                         ),
-  //                         child: Text('${field?.value}'),
-  //                       );
-  //                     }).toList(),
-  //                   );
-  //                 }).toList(),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 16),
-  //           ],
-  //         );
-  //       }).toList(),
-  //     ),
-  //   );
-  // }
-
-  Widget _buildListView(ReportController ctrl, BuildContext context) {
-    if (ctrl.reportsFetched) {
-      return Center(child: Text("notFound".tr));
-    }
-
-    return SingleChildScrollView(
-      // scrollDirection: Axis.vertical,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: ctrl.reportItems.map((group) {
-          final rows = group.rows ?? [];
-          if (rows.isEmpty) {
-            //   // ✅ Skip this group entirely
-            return const SizedBox.shrink();
-          }
-          final headers = group.rows
-              .expand((row) => row.fields.keys)
-              .toSet()
-              .toList();
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Group title
-              Container(
-                color: Colors.blue[200],
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 12,
-                ),
-                child: Text(
-                  group.basliq,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Table with horizontal scroll
-              // Real Table with horizontal scroll
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Table(
-                  border: TableBorder.all(color: Colors.grey.shade300),
-                  defaultColumnWidth: const IntrinsicColumnWidth(),
-                  children: [
-                    // Header row
-                    TableRow(
-                      decoration: BoxDecoration(color: Colors.blue[100]),
-                      children: headers.map((h) {
-                        return Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Text(
-                            h,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
-                    // Data rows
-                    if (rows.isNotEmpty)
-                      ...rows.map((row) {
-                        return TableRow(
-                          children: headers.map((h) {
-                            final field = row.fields[h];
-                            return Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(
-                                field?.value?.toString() ?? '',
-                                textAlign: TextAlign.center,
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      }),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  void printReports(ReportController ctrl) async {
-    final pdf = pw.Document();
-    final font = await loadFont();
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        build: (context) {
-          final allWidgets = <pw.Widget>[];
-
-          for (var group in ctrl.reportItems) {
-            final rows = group.rows ?? [];
-            final headers = rows.isNotEmpty
-                ? rows.expand((row) => row.fields.keys).toSet().toList()
-                : [];
-
-            // Group title
-            allWidgets.add(
-              pw.Text(
-                group.basliq,
-                style: pw.TextStyle(
-                  font: font,
-                  fontSize: 16,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-            );
-            allWidgets.add(pw.SizedBox(height: 6));
-
-            if (rows.isNotEmpty) {
-              allWidgets.add(
-                pw.TableHelper.fromTextArray(
-                  headers: headers,
-                  data: rows
-                      .map(
-                        (row) => headers
-                            .map((h) => row.fields[h]?.value?.toString() ?? '')
-                            .toList(),
-                      )
-                      .toList(),
-                  headerStyle: pw.TextStyle(
-                    font: font,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColors.white,
-                  ),
-                  headerDecoration: const pw.BoxDecoration(
-                    color: PdfColors.blue,
-                  ),
-                  cellStyle: pw.TextStyle(font: font, fontSize: 10),
-                  cellAlignment: pw.Alignment.center,
-                  headerAlignment: pw.Alignment.center,
-                ),
-              );
-              allWidgets.add(pw.SizedBox(height: 12));
-            }
-          }
-
-          return allWidgets;
-        },
-      ),
-    );
-    // Collect all widgets
-    // final allWidgets = <pw.Widget>[];
-    // int rowCount = 0;
-
-    // for (var group in ctrl.reportItems) {
-    //   final rows = group.rows ?? [];
-    //   rowCount += rows.length;
-    //   final headers = rows.isNotEmpty
-    //       ? rows.expand((row) => row.fields.keys).toSet().toList()
-    //       : [];
-
-    //   // Group title
-    //   allWidgets.add(
-    //     pw.Text(
-    //       group.basliq,
-    //       style: pw.TextStyle(
-    //         font: font,
-    //         fontSize: 16,
-    //         fontWeight: pw.FontWeight.bold,
-    //       ),
-    //     ),
-    //   );
-    //   allWidgets.add(pw.SizedBox(height: 6));
-
-    //   // Add table only if rows exist
-    //   if (rows.isNotEmpty) {
-    //     allWidgets.add(
-    //       pw.TableHelper.fromTextArray(
-    //         headers: headers,
-    //         data: rows
-    //             .map(
-    //               (row) => headers
-    //                   .map((h) => row.fields[h]?.value?.toString() ?? '')
-    //                   .toList(),
-    //             )
-    //             .toList(),
-    //         headerStyle: pw.TextStyle(
-    //           font: font,
-    //           fontWeight: pw.FontWeight.bold,
-    //           color: PdfColors.white,
-    //         ),
-    //         headerDecoration: const pw.BoxDecoration(color: PdfColors.blue),
-    //         cellStyle: pw.TextStyle(font: font, fontSize: 10),
-    //         cellAlignment: pw.Alignment.center,
-    //         headerAlignment: pw.Alignment.center,
-    //       ),
-    //     );
-    //     allWidgets.add(pw.SizedBox(height: 12));
-    //   }
-    // }
-
-    //   pdf.addPage(
-    //     pw.MultiPage(
-    //       pageFormat: PdfPageFormat.a4,
-    //       build: (context) {
-    //         final widgets = <pw.Widget>[
-    //           pw.Text(
-    //             group.basliq,
-    //             style: pw.TextStyle(
-    //               font: font,
-    //               fontSize: 18,
-    //               fontWeight: pw.FontWeight.bold,
-    //             ),
-    //           ),
-    //           pw.SizedBox(height: 8),
-    //         ];
-
-    //         if (rows.isNotEmpty) {
-    //           widgets.add(
-    //             pw.TableHelper.fromTextArray(
-    //               headers: headers,
-    //               data: rows
-    //                   .map(
-    //                     (row) => headers
-    //                         .map((h) => row.fields[h]?.value?.toString() ?? '')
-    //                         .toList(),
-    //                   )
-    //                   .toList(),
-    //               headerStyle: pw.TextStyle(
-    //                 font: font,
-    //                 fontWeight: pw.FontWeight.bold,
-    //                 color: PdfColors.white,
-    //               ),
-    //               headerDecoration: const pw.BoxDecoration(
-    //                 color: PdfColors.blue,
-    //               ),
-    //               cellStyle: pw.TextStyle(font: font),
-    //               cellAlignment: pw.Alignment.center,
-    //               headerAlignment: pw.Alignment.center,
-    //             ),
-    //           );
-    //           widgets.add(pw.SizedBox(height: 16));
-    //         }
-
-    //         return widgets;
-    //       },
-    //     ),
-    //   );
-    // }
-
-    // final estimatedHeight = (rowCount * 20) + 300;
-    // final pageHeight = estimatedHeight < 842
-    //     ? 842
-    //     : estimatedHeight; // at least A4
-
-    // Put everything on a single very tall page
-    // pdf.addPage(
-    //   pw.Page(
-    //     pageFormat: PdfPageFormat(
-    //       595,
-    //       pageHeight.toDouble(),
-    //     ), // A4 width, 5000 height
-    //     build: (context) => pw.Column(
-    //       crossAxisAlignment: pw.CrossAxisAlignment.start,
-    //       children: allWidgets,
-    //     ),
-    //   ),
+  void _focusAndSelectAll(
+    TextEditingController controller,
+    FocusNode focusNode,
+  ) {
+    FocusScope.of(Get.context!).requestFocus(focusNode);
+    Future.delayed(const Duration(milliseconds: 50), () {
+      controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: controller.text.length,
+      );
+    });
+    // controller.selection = TextSelection(
+    //   baseOffset: 0,
+    //   extentOffset: controller.text.length,
     // );
-    // Printing
-    if (kIsWeb) {
-      final pdfBytes = await pdf.save();
-      await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
-    } else {
-      await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+  }
+
+  void _searchBarcode(SayDuzeltController ctrl) async {
+    final dto = SayDuzeltRequest(
+      id: int.tryParse(ctrl.idController.text.trim()) ?? 0,
+      barcode: ctrl.barcodeController.text.trim(),
+    );
+    final result = await ctrl.qaliq(dto);
+    if (result != null) {
+      ctrl.txtController.text = result
+          .toString(); // put fetched value in txtController
+      // _focusAndSelectAll(ctrl.txtController, ctrl.txtFocus); // select all text
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusAndSelectAll(ctrl.txtController, ctrl.txtFocus);
+      });
     }
   }
 
-  Future<pw.Font> loadFont() async {
-    final fontData = await rootBundle.load('assets/fonts/NotoSans-Regular.ttf');
-    return pw.Font.ttf(fontData);
-  }
-
-  Widget _buildGridView(ReportController ctrl, BuildContext context) {
-    int crossAxisCount = MediaQuery.of(context).size.width > 600 ? 3 : 2;
-    double childAspectRatio = MediaQuery.of(context).size.width > 600 ? 2 : 1.3;
-    return GridView.builder(
-      // padding: EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: childAspectRatio,
-      ),
-      itemCount: ctrl.filteredReports.length,
-      itemBuilder: (context, index) {
-        final customer = ctrl.filteredReports[index];
-        return InkWell(
-          onTap: () {
-            // Navigate to detail page
-            // Get.to(() => CustomerDetailPage(customer: customer));
-          },
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: MediaQuery.of(context).size.width > 600 ? 40 : 30,
-                    child: Text(customer.name),
-                  ),
-                  const SizedBox(height: 8),
-                  Flexible(
-                    child: Text(
-                      customer.name,
-                      style: TextStyle(
-                        fontSize: MediaQuery.of(context).size.width > 600
-                            ? 18
-                            : 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Flexible(
-                    child: Text(
-                      customer.name,
-                      style: TextStyle(
-                        fontSize: MediaQuery.of(context).size.width > 600
-                            ? 16
-                            : 12,
-                        color: Colors.grey[700],
-                      ),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ); // return Card(
-        //   child: Center(
-        //     child: ListTile(
-        //       leading: CircleAvatar(child: Text(customer.name[0])),
-        //       title: Text(customer.name),
-        //       subtitle: Text(customer.email),
-        //     ),
-        //   ),
-        // );
-      },
-    );
+  Decimal calculateExpression(String input) {
+    try {
+      final expression = Expression.parse(input);
+      final evaluator = const ExpressionEvaluator();
+      final result = evaluator.eval(expression, {});
+      return Decimal.tryParse(result.toString()) ?? Decimal.zero;
+    } catch (_) {
+      return Decimal.zero;
+    }
   }
 }

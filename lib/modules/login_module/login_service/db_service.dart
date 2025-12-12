@@ -1,8 +1,29 @@
+import 'package:hbmarket/modules/login_module/login_service/saved_device_service.dart';
 import 'package:hbmarket/modules/login_module/login_service/saved_user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../http/api_class.dart';
+
+
 class DbService {
   final SavedUserService savedUserService = SavedUserService();
+  final SavedDeviceService savedDeviceService = SavedDeviceService();
+  ApiClient client = new ApiClient();
+
+
+  Future<String> checkDb(int dbKey) async {
+    final endpoint = '/api/check/db?dbKey=$dbKey';
+    final response = await client.get(endpoint);
+    return response.body;
+  }
+
+  Future<List<Map<String, dynamic>>> getDbListNew() async {
+    final saved = await savedDeviceService.getSavedDevice();
+    if (saved != null && saved.dbList.isNotEmpty) {
+      return List<Map<String, dynamic>>.from(saved.dbList);
+    }
+    return [];
+  }
 
   Future<List<Map<String, dynamic>>> getDbList() async {
     final savedUser = await savedUserService.getSavedUser();

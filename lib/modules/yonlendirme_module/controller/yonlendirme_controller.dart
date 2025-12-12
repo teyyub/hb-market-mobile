@@ -4,6 +4,8 @@ import 'package:hbmarket/modules/temizlenme_module/models/temizle_model.dart';
 import 'package:hbmarket/modules/yonlendirme_module/models/yonlendirme_model.dart';
 import 'package:hbmarket/modules/yonlendirme_module/service/yonlendirme_service.dart';
 
+import '../../login_module/controller/db_selection_controller.dart';
+
 class YonlendirmeController extends GetxController {
   final YonlendirmeService service = YonlendirmeService(client: ApiClient());
 
@@ -46,9 +48,10 @@ class YonlendirmeController extends GetxController {
 
   Future<void> updateKecidOk(YonlendirmeDto item, bool val) async {
     try {
+      final dbId = DbSelectionController.to.getDbId;
       final updatedDto = item.copyWith(kecidOk: val);
-      await service.updateYonlendirme(item.id!, updatedDto);
-
+      // await service.updateYonlendirme(item.id!, updatedDto);
+      await service.updateYonlendirmeV1(dbId, updatedDto);
       // update local list
       int index = yonlendirmeList.indexWhere((e) => e.id == item.id);
       if (index != -1) {

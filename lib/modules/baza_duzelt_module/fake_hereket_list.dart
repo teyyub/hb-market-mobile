@@ -1,4 +1,3 @@
-import 'package:hbmarket/modules/hereket_module/models/hereket_model.dart';
 
 // final List<Hereket> fakeHereket = [
 //   Hereket(name: 'Alice11', amount: 1002),

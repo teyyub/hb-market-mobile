@@ -45,7 +45,7 @@ class TemizlenmePage extends StatelessWidget {
     // return Scaffold(
     //   appBar: AppBar(title: const Text('Temizlenme List')),
     return MainLayout(
-      title: 'Temizlenme',
+      title: 'Təmizlənmə',
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -57,7 +57,7 @@ class TemizlenmePage extends StatelessWidget {
 
         return ListView.builder(
           itemCount: controller.temizlenmeList.length,
-          itemBuilder: (context, index) {
+          itemBuilder: (BuildContext context, int index) {
             final item = controller.temizlenmeList[index];
             return ListTile(
               title: Text('ID: ${item.id}'),

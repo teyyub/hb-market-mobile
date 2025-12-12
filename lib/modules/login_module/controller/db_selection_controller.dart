@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hbmarket/modules/login_module/login_service/db_service.dart';
 import 'package:hbmarket/modules/login_module/login_service/login_service.dart';
@@ -30,36 +31,17 @@ class DbSelectionController extends GetxController {
     // _initController();
   }
 
-  Future<void> _initController() async {
-    await loadDbList();
-    await loadSelectedDb();
-    print('Loaded dbList: $dbList');
-    print('Selected DB: $selectedDb');
-  }
-
   Future<void> loadDbList() async {
-    dbList = await dbService.getDbList();
+    dbList = await dbService.getDbListNew();
   }
-
-  // Future<void> handleDbSelection() async {
-
-  //   if (selectedDb != null) {
-  //     // User already has a selected DB → go straight to dashboard
-  //     Get.offAll(() => DashboardPage());
-  //   } else if (dbList.length == 1) {
-  //     // Only one DB → save automatically
-  //     await saveDb(dbList.first);
-  //     Get.offAll(() => DashboardPage());
-  //   } else {
-  //     // Multiple DBs → show selection page
-  //     Get.to(() => DbSelectionPage());
-  //   }
-  // }
-
+  Future<void> checkDb()async {
+      String val = await dbService.checkDb(getDbId);
+      debugPrint('${val}');
+  }
   Future<void> handleDbSelection() async {
     // Load only once at startup
     await loadSelectedDb();
-    print('selectedDb at handleDbSelection: ${selectedDb}');
+    debugPrint('selectedDb at handleDbSelection: ${selectedDb}');
     if (selectedDb != null) {
       // ✅ User already selected a DB before → skip selection
       Get.offAll(() => DashboardPage());

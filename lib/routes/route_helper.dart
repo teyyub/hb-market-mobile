@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hbmarket/modules/baza_duzelt_module/pages/say_duzelt_page.dart';
 import 'package:hbmarket/modules/customer_module/models/customer_model.dart';
@@ -13,6 +14,7 @@ import 'package:hbmarket/modules/pul_transfer_module/models/pul_tranfer_model.da
 import 'package:hbmarket/modules/pul_transfer_module/pages/pul_transfer_page.dart';
 import 'package:hbmarket/modules/raport_module/pages/report_page.dart';
 import 'package:hbmarket/modules/temizlenme_module/pages/temizle_page.dart';
+import 'package:hbmarket/modules/xerc_qazanc_module/controller/xercqazanc_controller.dart';
 import 'package:hbmarket/modules/xerc_qazanc_module/pages/xerc_qazanc_page.dart';
 import 'package:hbmarket/modules/yonlendirme_module/pages/yonlendirme_page.dart';
 import 'package:hbmarket/pages/dashboard_page.dart';
@@ -73,7 +75,7 @@ class RouteHelper {
     GetPage(name: pul_emeliyyat, page: () => PulEmeliyyatPage()),
     GetPage(name: hereket_plani, page: () => HereketPlaniPage()),
     GetPage(name: temizlenme, page: () => TemizlenmePage()),
-     GetPage(name: say_duzelt, page: () => SayDuzeltPage()),
+    GetPage(name: say_duzelt, page: () => SayDuzeltPage()),
     GetPage(
       name: yonlendirme,
       page: () {

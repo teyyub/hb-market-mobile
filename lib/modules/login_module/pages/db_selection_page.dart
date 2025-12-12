@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hbmarket/modules/login_module/controller/db_selection_controller.dart';
 import 'package:hbmarket/pages/dashboard_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class DbSelectionPage extends StatelessWidget {
   @override
@@ -27,14 +26,14 @@ class DbSelectionPage extends StatelessWidget {
         child: dbList.isEmpty
             ? const Center(
                 child: Text(
-                  "No databases available for your account",
+                  "Sizin ucun hec biri biznes yoxdur",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                 ),
               )
             : ListView.separated(
                 itemCount: dbList.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
+                itemBuilder: (BuildContext context, int index) {
                   final db = dbList[index];
                   return Card(
                     shape: RoundedRectangleBorder(
@@ -53,6 +52,7 @@ class DbSelectionPage extends StatelessWidget {
                       subtitle: Text("ID: ${db["id"]}"),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                       onTap: () async {
+                       await dbController.checkDb();
                         // show loading dialog
                         Get.dialog(
                           const Center(child: CircularProgressIndicator()),
