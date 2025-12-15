@@ -26,6 +26,19 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Setup keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/key.jks
+          echo "storeFile=key.jks" > android/key.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+
+      - name: Verify keystore files
+        run: |
+          ls -l android/key.jks android/key.properties 
+    
+
       # 🟢 Build Android APK
       - name: Build Android APK
         run: flutter build apk --release
@@ -35,6 +48,19 @@ jobs:
         with:
           name: app-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload APK to server
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_KEY: ${{ secrets.SERVER_KEY }}
+        run: |
+          echo "$SERVER_KEY" > key.pem
+          chmod 600 key.pem
+          scp -i key.pem -P $SERVER_PORT build/app/outputs/flutter-apk/app-release.apk \
+            $SERVER_USER@$SERVER_HOST:/home/deploy/workspace/hbmarket/mobile
+          rm key.pem 
 
       # 🍏 Build iOS app (unsigned)
       - name: Build iOS App (unsigned)
@@ -47,23 +73,3 @@ jobs:
           path: build/ios/iphoneos/Runner.app
 
             # 5️⃣ Private key-i hazırlamaq və SCP ilə upload
-      - name: Upload APK to server
-        env:
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_PORT: ${{ secrets.SERVER_PORT }}
-          SERVER_KEY: ${{ secrets.SERVER_KEY }}
-        run: |
-          echo "$SERVER_KEY" > key.pem
-          chmod 600 key.pem
-          scp -i key.pem -P $SERVER_PORT build/app/outputs/flutter-apk/app-release.apk \
-            $SERVER_USER@$SERVER_HOST:/home/deploy/workspace/hbmarket/mobile
-          rm key.pem
-
-      - name: Setup keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/key.jks
-          echo "storeFile=key.jks" > android/key.properties
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
