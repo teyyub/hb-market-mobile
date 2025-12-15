@@ -89,7 +89,7 @@ android {
                 storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
 
                 println("  keyAlias set: ${keyAlias?.isNotEmpty() ?: false}")
-                println("  keyPassword set: ${keyPassword.isNotEmpty() ?: false}")
+                println("  keyPassword set: ${keyPassword?.isNotEmpty() ?: false}")
                 println("  storeFile set: ${storeFile != null}")
                 println("  storeFile path: ${storeFile?.absolutePath}")
                 println("  storePassword set: ${storePassword?.isNotEmpty() ?: false}")
