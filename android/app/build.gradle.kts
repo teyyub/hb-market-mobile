@@ -31,7 +31,19 @@ android {
 
     signingConfigs {
         create("release") {
-            // Empty for now - will be filled in afterEvaluate
+            val keystoreFile = file("${projectDir}/key.jks") // Path found in your debug output
+
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                // Read from environment variables
+                keyAlias = System.getenv("KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+
+                println("✅ Release signing configured with keystore at: ${keystoreFile.absolutePath}")
+            } else {
+                println("⚠️ Keystore not found, release config will be incomplete")
+            }
         }
         getByName("debug") {
             // Default debug config
@@ -40,7 +52,14 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            val releaseConfig = signingConfigs.getByName("release")
+            if (releaseConfig.storeFile != null ) {
+                signingConfig = releaseConfig
+                println("✅ Using release signing configuration")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+                println("⚠️ Release config incomplete, falling back to debug signing")
+            }
             isMinifyEnabled = false
             isShrinkResources = false
         }
@@ -49,60 +68,6 @@ android {
         }
     }
 
-    afterEvaluate {
-        println("=== DEBUG: afterEvaluate START ===")
-        println("Project directory: $projectDir")
-
-        // Check environment variables
-        println("KEY_ALIAS env: ${System.getenv("KEY_ALIAS")}")
-        println("KEY_PASSWORD env: ${System.getenv("KEY_PASSWORD")?.take(3)}...") // Show first 3 chars
-        println("KEYSTORE_PASSWORD env: ${System.getenv("KEYSTORE_PASSWORD")?.take(3)}...")
-
-        // Try multiple approaches
-        val possiblePaths = listOf(
-            "${projectDir}/android/app/key.jks",
-            "android/app/key.jks",
-            file("key.jks").absolutePath,
-            rootProject.file("android/app/key.jks").absolutePath,
-            file("${projectDir}/key.jks").absolutePath
-        )
-
-        var keystoreFile: File? = null
-        for ((index, path) in possiblePaths.withIndex()) {
-            val file = file(path)
-            println("Checking path $index: $path")
-            println("  File exists: ${file.exists()}")
-            println("  Absolute path: ${file.absolutePath}")
-            if (file.exists()) {
-                keystoreFile = file
-                println("✅ Found keystore at: ${file.absolutePath}")
-                break
-            }
-        }
-
-        if (keystoreFile != null && System.getenv("KEY_ALIAS") != null) {
-            println("✅ Configuring release signing...")
-            signingConfigs.getByName("release").apply {
-                keyAlias = System.getenv("KEY_ALIAS") ?: ""
-                keyPassword = System.getenv("KEY_PASSWORD") ?: ""
-                storeFile = keystoreFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
-
-                println("  keyAlias set: ${keyAlias?.isNotEmpty() ?: false}")
-                println("  keyPassword set: ${keyPassword?.isNotEmpty() ?: false}")
-                println("  storeFile set: ${storeFile != null}")
-                println("  storeFile path: ${storeFile?.absolutePath}")
-                println("  storePassword set: ${storePassword?.isNotEmpty() ?: false}")
-            }
-            println("✅ Release signing configured")
-        } else {
-            println("⚠️ Falling back to debug signing")
-            println("  keystoreFile found: ${keystoreFile != null}")
-            println("  KEY_ALIAS exists: ${System.getenv("KEY_ALIAS") != null}")
-            buildTypes.getByName("release").signingConfig = signingConfigs.getByName("debug")
-        }
-        println("=== DEBUG: afterEvaluate END ===")
-    }
 }
 flutter {
     source = "../.."
