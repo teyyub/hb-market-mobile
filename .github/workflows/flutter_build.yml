@@ -59,3 +59,11 @@ jobs:
           scp -i key.pem -P $SERVER_PORT build/app/outputs/flutter-apk/app-release.apk \
             $SERVER_USER@$SERVER_HOST:/home/deploy/workspace/hbmarket/mobile
           rm key.pem
+
+      - name: Setup keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/key.jks
+          echo "storeFile=key.jks" > android/key.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
