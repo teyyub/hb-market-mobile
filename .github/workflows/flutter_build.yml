@@ -109,9 +109,16 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
           SERVER_KEY: ${{ secrets.SERVER_KEY }}
         run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -p $SERVER_PORT $SERVER_HOST >> ~/.ssh/known_hosts 2>/dev/null
+          echo "$SERVER_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           echo "$SERVER_KEY" > key.pem
           chmod 600 key.pem
-          scp -i key.pem -P $SERVER_PORT build/app/outputs/flutter-apk/app-release.apk \
-            $SERVER_USER@$SERVER_HOST:/home/deploy/workspace/hbmarket/mobile
-          rm key.pem 
+           scp -i ~/.ssh/id_rsa -P $SERVER_PORT \
+            build/app/outputs/flutter-apk/app-release.apk \
+            $SERVER_USER@$SERVER_HOST:/home/deploy/workspace/hbmarket/mobile/
+          rm -f ~/.ssh/id_rsa
+          echo "✅ APK uploaded successfully!" 
 
