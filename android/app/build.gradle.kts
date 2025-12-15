@@ -88,11 +88,11 @@ android {
                 storeFile = keystoreFile
                 storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
 
-                println("  keyAlias set: ${keyAlias?.isNotEmpty() ? : false}")
-                println("  keyPassword set: ${keyPassword.isNotEmpty() ? : false}")
+                println("  keyAlias set: ${keyAlias?.isNotEmpty() ?: false}")
+                println("  keyPassword set: ${keyPassword.isNotEmpty() ?: false}")
                 println("  storeFile set: ${storeFile != null}")
                 println("  storeFile path: ${storeFile?.absolutePath}")
-                println("  storePassword set: ${storePassword?.isNotEmpty() ? : false}")
+                println("  storePassword set: ${storePassword?.isNotEmpty() ?: false}")
             }
             println("✅ Release signing configured")
         } else {
