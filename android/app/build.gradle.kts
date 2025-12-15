@@ -49,8 +49,6 @@ android {
         }
     }
 
-
-// CORRECT PLACEMENT: afterEvaluate goes HERE, outside android block
     afterEvaluate {
         val keystorePropertiesFile = rootProject.file("key.properties")
         if (keystorePropertiesFile.exists()) {
@@ -61,7 +59,13 @@ android {
             signingConfigs.getByName("release").apply {
                 keyAlias = keystoreProperties.getProperty("keyAlias", "")
                 keyPassword = keystoreProperties.getProperty("keyPassword", "")
-                storeFile = file(keystoreProperties.getProperty("storeFile", ""))
+                val storeFilePath = keystoreProperties.getProperty("storeFile", "")
+                if (storeFilePath.isNotEmpty()) {
+                    storeFile = file(storeFilePath)
+                } else {
+                    println("⚠️ Warning: storeFile path is empty in key.properties")
+                }
+
                 storePassword = keystoreProperties.getProperty("storePassword", "")
             }
         } else {
