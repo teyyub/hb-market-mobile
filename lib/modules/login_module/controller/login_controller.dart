@@ -108,12 +108,12 @@ class LoginController extends GetxController {
   Future<void> saveDevice() async {
     print('save clicked...');
     deviceId =  int.parse(deviceController.text);
-    final error = _validateLogin(deviceId.toString(), password);
+    // final error = _validateLogin(deviceId.toString(), password);
 
-    if (error != null) {
-      Get.snackbar('error'.tr, error);
-      return;
-    }
+    // if (error != null) {
+    //   Get.snackbar('error'.tr, error);
+    //   return;
+    // }
     final device = SavedDevice(
       deviceId: deviceId,
       password: password,

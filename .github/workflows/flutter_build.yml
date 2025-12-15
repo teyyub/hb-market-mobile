@@ -48,7 +48,14 @@ jobs:
       - name: Verify keystore files
         run: |
           ls -l android/app/key.jks android/app/key.properties 
-    
+
+      - name: Debug - Show key.properties content
+        run: |
+          echo "=== Checking if key.properties exists ==="
+          ls -la android/app/key.properties 2>/dev/null || echo "File not found!"
+          echo "=== File content ==="
+          cat android/app/key.properties 2>/dev/null || echo "Cannot read file!"
+          echo "=== End of content ==="
 
       # 🟢 Build Android APK
       - name: Build Android APK
@@ -73,14 +80,3 @@ jobs:
             $SERVER_USER@$SERVER_HOST:/home/deploy/workspace/hbmarket/mobile
           rm key.pem 
 
-      # 🍏 Build iOS app (unsigned)
-      - name: Build iOS App (unsigned)
-        run: flutter build ios --release --no-codesign
-
-      - name: Upload iOS app artifact (.app)
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-release-app
-          path: build/ios/iphoneos/Runner.app
-
-            # 5️⃣ Private key-i hazırlamaq və SCP ilə upload
