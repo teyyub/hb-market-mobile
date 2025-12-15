@@ -48,28 +48,28 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-}
+
 
 // CORRECT PLACEMENT: afterEvaluate goes HERE, outside android block
-afterEvaluate {
-    val keystorePropertiesFile = rootProject.file("key.properties")
-    if (keystorePropertiesFile.exists()) {
-        val keystoreProperties = Properties().apply {
-            load(FileInputStream(keystorePropertiesFile))
-        }
+    afterEvaluate {
+        val keystorePropertiesFile = rootProject.file("key.properties")
+        if (keystorePropertiesFile.exists()) {
+            val keystoreProperties = Properties().apply {
+                load(FileInputStream(keystorePropertiesFile))
+            }
 
-        signingConfigs.getByName("release").apply {
-            keyAlias = keystoreProperties.getProperty("keyAlias", "")
-            keyPassword = keystoreProperties.getProperty("keyPassword", "")
-            storeFile = file(keystoreProperties.getProperty("storeFile", ""))
-            storePassword = keystoreProperties.getProperty("storePassword", "")
+            signingConfigs.getByName("release").apply {
+                keyAlias = keystoreProperties.getProperty("keyAlias", "")
+                keyPassword = keystoreProperties.getProperty("keyPassword", "")
+                storeFile = file(keystoreProperties.getProperty("storeFile", ""))
+                storePassword = keystoreProperties.getProperty("storePassword", "")
+            }
+        } else {
+            // Fall back to debug signing if no key.properties
+            buildTypes.getByName("release").signingConfig = signingConfigs.getByName("debug")
         }
-    } else {
-        // Fall back to debug signing if no key.properties
-        buildTypes.getByName("release").signingConfig = signingConfigs.getByName("debug")
     }
 }
-
 flutter {
     source = "../.."
 }
