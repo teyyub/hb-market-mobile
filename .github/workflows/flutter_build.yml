@@ -56,6 +56,8 @@ jobs:
           echo "=== File content ==="
           cat android/app/key.properties 2>/dev/null || echo "Cannot read file!"
           echo "=== End of content ==="
+          echo "=== Print content directly ==="
+          cat android/app/key.properties
 
       # 🟢 Build Android APK
       - name: Build Android APK
