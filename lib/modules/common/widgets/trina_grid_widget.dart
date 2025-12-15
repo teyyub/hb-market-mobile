@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hbmarket/modules/common/widgets/column_visibility_menu.dart';
 import 'package:hbmarket/modules/common/widgets/custom_trina_grid.dart';
 import 'package:trina_grid/trina_grid.dart';
 
-class TrinaGridWidget<T> extends StatelessWidget {
+class TrinaGridWidget<T> extends StatefulWidget {
   final List<T> data;
   final dynamic selectedId;
   final Function(T)? onSelect;
@@ -28,10 +27,29 @@ class TrinaGridWidget<T> extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final savedColumnWidths = initialColumnWidths ?? {};
+  State<TrinaGridWidget<T>> createState() => _TrinaGridWidgetState<T>();
+}
 
-    final visibleColumns = columns.where((c) => c['visible'] == true).toList();
+class _TrinaGridWidgetState<T> extends State<TrinaGridWidget<T>> {
+  dynamic _selectedId;
+  @override
+  void initState() {
+    super.initState();
+    // Default olaraq ilk item seçilsin
+    if (widget.selectedId == null && widget.data.isNotEmpty) {
+      _selectedId = widget.getId(widget.data.first);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onSelect?.call(widget.data.first);
+      });
+    } else {
+      _selectedId = widget.selectedId;
+    }
+  }
+@override
+  Widget build(BuildContext context) {
+    final savedColumnWidths = widget.initialColumnWidths ?? {};
+
+    final visibleColumns = widget.columns.where((c) => c['visible'] == true).toList();
 
     final displayColumns = visibleColumns.isNotEmpty
         ? visibleColumns
@@ -39,31 +57,21 @@ class TrinaGridWidget<T> extends StatelessWidget {
             {'key': 'placeholder', 'label': 'Bosdur', 'visible': true},
           ];
 
-    // final displayColumns = visibleColumns.isNotEmpty ? visibleColumns : columns;
-
     return Column(
       children: [
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.end,
-        //   children: [
-        //     ColumnVisibilityMenu(
-        //       columns: columns,
-        //       onChanged: (key, visible) {
-        //         if (onColumnVisibilityChanged != null) {
-        //           onColumnVisibilityChanged!(key, visible);
-        //         }
-        //       },
-        //     ),
-        //   ],
-        // ),
         const SizedBox(height: 4),
         Expanded(
           child: CustomTrinaGrid<T>(
-            key: ValueKey('${columns.map((Map<String, dynamic> c) => c['visible']).join()}'),
-            data: data,
-            selectedId: selectedId,
-            onSelect: onSelect,
-            getId: getId,
+            key: ValueKey('${widget.columns.map((Map<String, dynamic> c) => c['visible']).join()}'),
+            data: widget.data,
+            selectedId: _selectedId,
+            onSelect: (item) {
+              setState(() {
+                _selectedId = widget.getId(item);
+              });
+              widget.onSelect?.call(item);
+            },
+            getId: widget.getId,
             columns: displayColumns
                 .map(
                   (c) => TrinaColumn(
@@ -77,8 +85,8 @@ class TrinaGridWidget<T> extends StatelessWidget {
                 )
                 .toList(),
             cellBuilder: (item) {
-              if (cellBuilder != null) {
-                return cellBuilder!(item);
+              if (widget.cellBuilder != null) {
+                return widget.cellBuilder!(item);
               }
               // Default cell mapping if cellBuilder not provided
               final Map<String, TrinaCell> cells = {};

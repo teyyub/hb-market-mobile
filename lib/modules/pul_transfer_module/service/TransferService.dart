@@ -17,6 +17,7 @@ class TransferService {
       final response = await client.get(endpoint);
 
       if (response.statusCode == 200) {
+        debugPrint('response.body ${response.body}');
         final List<dynamic> jsonList = json.decode(response.body);
         return jsonList
             .map(

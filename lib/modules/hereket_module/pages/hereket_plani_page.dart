@@ -9,18 +9,23 @@ import 'package:hbmarket/modules/common/widgets/column_visibility_menu.dart';
 import 'package:hbmarket/modules/common/widgets/custom_table.dart';
 import 'package:hbmarket/modules/common/widgets/trina_grid_widget.dart';
 import 'package:hbmarket/modules/hereket_module/controller/hereket_plani_controller.dart';
+import 'package:hbmarket/modules/hereket_module/models/hereket_apply_response.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_model.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_reponse.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_request.dart';
 import 'package:hbmarket/modules/hereket_module/pages/qaime_bax_page.dart';
 import 'package:hbmarket/modules/hereket_module/widget/hereket_widget.dart';
 import 'package:hbmarket/modules/hereket_module/widget/work_widget.dart';
+import 'package:hbmarket/modules/mal_hereketi_module/pages/mal_hereketi_page.dart';
 import 'package:hbmarket/modules/object_module/controller/obyekt_controller.dart';
 import 'package:hbmarket/modules/raport_module/controller/report_controller.dart';
 import 'package:pdf/pdf.dart' show PdfPageFormat, PdfColors;
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:trina_grid/trina_grid.dart';
+
+import '../models/hereket_apply.dart';
+import '../models/hereket_selah_dto.dart';
 
 class HereketPlaniPage extends StatelessWidget {
   final ReportController controller = Get.find<ReportController>();
@@ -54,26 +59,28 @@ class HereketPlaniPage extends StatelessWidget {
                       ),
                       margin: const EdgeInsets.only(bottom: 16),
                       child: LayoutBuilder(
-                        builder: (BuildContext context, BoxConstraints constraints) {
-                          return SizedBox(
-                            width: constraints.maxWidth,
-                            height:
-                                constraints.maxHeight, // ensures bounded height
-                            child: _buildTrinaGrid(ctrl),
-                            // child: _buildTable2(ctrl),
-                          );
-                        },
+                        builder:
+                            (BuildContext context, BoxConstraints constraints) {
+                              return SizedBox(
+                                width: constraints.maxWidth,
+                                height: constraints
+                                    .maxHeight, // ensures bounded height
+                                child: _buildTrinaGrid(ctrl),
+                                // child: _buildTable2(ctrl),
+                              );
+                            },
                       ),
                     ),
                   ),
 
                   Row(
                     children: [
-
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            Get.to(() => QaimeBaxPage(dplanId: ctrl.selectedId!,));
+                            Get.to(
+                              () => QaimeBaxPage(dplanId: ctrl.selectedId!),
+                            );
                           },
                           child: const Text('Bax'),
                         ),
@@ -87,7 +94,6 @@ class HereketPlaniPage extends StatelessWidget {
                           child: const Text('Funksiyalar'),
                         ),
                       ),
-
                     ],
                   ),
                 ],
@@ -121,7 +127,7 @@ class HereketPlaniPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: () {
-                       hereketController.refreshHereket();
+                      hereketController.refreshHereket();
                     },
                     child: Text("refresh".tr),
                   ),
@@ -169,18 +175,19 @@ class HereketPlaniPage extends StatelessWidget {
                           content: Text("Əminsiniz?".tr),
                           actions: [
                             TextButton(
-                              onPressed: () => Get.back(result: false), // return false
+                              onPressed: () =>
+                                  Get.back(result: false), // return false
                               child: Text("Xeyr".tr),
                             ),
                             ElevatedButton(
-                              onPressed: () => Get.back(result: true), // return true
+                              onPressed: () =>
+                                  Get.back(result: true), // return true
                               child: Text("Bəli".tr),
                             ),
                           ],
                         ),
                         barrierDismissible: false,
                       );
-
 
                       if (confirm != true) return;
                       await hereketController.deleteHereket(
@@ -214,8 +221,88 @@ class HereketPlaniPage extends StatelessWidget {
                     },
                     child: Text("buttonWork".tr),
                   ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final result = await Get.dialog<bool>(
+                        AlertDialog(
+                          title: Text("Əminsiniz?"),
+                          content: Text("Davam etmək istəyirsiniz?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Get.back(result: false),
+                              child: const Text("Xeyr"),
+                            ),
+                            TextButton(
+                              onPressed: () => Get.back(result: true),
+                              child: const Text("Bəli"),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (result == false) return;
+                      // Get.dialog(
+                      //   const Center(child: CircularProgressIndicator()),
+                      //   barrierDismissible: false,
+                      // );
+                      final HereketSelahDto sel = await hereketController.checkHereketSelah(6);
 
-                const SizedBox(height: 8),
+                      if (sel.aktiv == '-') {
+                        showPermissionDialog(sel.name);
+                        return;
+                      }
+                      final herSel = await hereketController.checkHereketSelah(hereketController.selectedHereketDto!.id,);
+                      debugPrint('herSelah ${herSel}');
+                      if (herSel.aktiv == '-') {
+                        showPermissionDialog(herSel.name);
+                        return;
+                      }
+                      debugPrint('${hereketController.dplaId}');
+                      final dto = HereketApplyDto(
+                        qdplan: hereketController.dplaId!,
+                        qdaxil: 0,
+                      );
+
+                      hereketController.setHereketApplyDto(dto);
+                      final HereketApplyResponseDto result1 =
+                          await hereketController.hereketApply();
+                      Get.back();
+                      if (result1.success == true && result1.id == 0) {
+                        Get.snackbar(
+                          "Xəbərdarlıq",
+                          result1.message ?? "Bilinməyən bir xəta",
+                        );
+                        return;
+                      }
+
+                      final result2 = await Get.dialog<bool>(
+                        AlertDialog(
+                          content: Text("Mal hərəkətinə baxmaq istəyirsiz?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Get.back(result: false),
+                              child: const Text("Xeyr"),
+                            ),
+                            TextButton(
+                              onPressed: () => Get.back(result: true),
+                              child: const Text("Bəli"),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (result2 == true) {
+                        // İstifadəçi "Bəli" seçibsə, başqa səhifəyə keç
+                        Get.to(
+                          () => MalHereketiPage(),
+                        ); // YeniSəhifə sizin yönləndirmək istədiyiniz widget
+                      } else {
+                        Get.back();
+                      }
+                    },
+                    child: Text("buttonApply".tr),
+                  ),
+                  const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: () {
                       Get.back();
@@ -230,6 +317,36 @@ class HereketPlaniPage extends StatelessWidget {
       ),
       // isScrollControlled: true,
       // backgroundColor: Colors.transparent, // optional
+    );
+  }
+
+
+
+  void showPermissionDialog(String operationName) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text("Məlumat"),
+        content: RichText(
+          text: TextSpan(
+            style: const TextStyle(color: Colors.black, fontSize: 14),
+            children: [
+              const TextSpan(text: 'Sizin '),
+              TextSpan(
+                text: operationName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const TextSpan(text: ' səlahiyyətiniz yoxdur'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text("Bağla"),
+          ),
+        ],
+      ),
+      barrierDismissible: true,
     );
   }
 
@@ -299,40 +416,41 @@ class HereketPlaniPage extends StatelessWidget {
       DraggableScrollableSheet(
         expand: true, // Tam ekran üçün
         initialChildSize: 0.95, // Açılışda 95% hündürlük
-        minChildSize: 0.5,      // minimal hündürlük
-        maxChildSize: 0.95,     // maksimum hündürlük
+        minChildSize: 0.5, // minimal hündürlük
+        maxChildSize: 0.95, // maksimum hündürlük
         builder: (BuildContext context, ScrollController scrollController) {
           return GestureDetector(
-              behavior: HitTestBehavior.translucent, // boş yerlərdə də klik tutsun
-              onTap: () {
-                FocusScope.of(context).unfocus(); // 👉 klaviaturanı gizlədir
-              },
-              child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: SingleChildScrollView(
-              controller: scrollController, // scroll üçün
-              child: WorkWidget(
-                obyektId: obyektId,
-                hereketId: hereketController.selectedHereketDto!.id,
-                dPlanId: hereketController.dplaId!,
-                initial: null,
-                onSave: (HereketRequest dto) async {
-                  Get.back(); // Close the bottom sheet
-                },
+            behavior:
+                HitTestBehavior.translucent, // boş yerlərdə də klik tutsun
+            onTap: () {
+              FocusScope.of(context).unfocus(); // 👉 klaviaturanı gizlədir
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: SingleChildScrollView(
+                controller: scrollController, // scroll üçün
+                child: WorkWidget(
+                  obyektId: obyektId,
+                  hereketId: hereketController.selectedHereketDto!.id,
+                  dPlanId: hereketController.dplaId!,
+                  initial: null,
+                  onSave: (HereketRequest dto) async {
+                    Get.back(); // Close the bottom sheet
+                  },
+                ),
               ),
             ),
-          ));
+          );
         },
       ),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
     );
   }
-
 
   void _openWorkBottomSheet() {
     Get.bottomSheet(
@@ -422,59 +540,60 @@ class HereketPlaniPage extends StatelessWidget {
         maxChildSize: 0.95,
         builder: (BuildContext context, ScrollController scrollController) {
           return GestureDetector(
-              behavior: HitTestBehavior.opaque, // boş sahələrdə klikləri də tutmaq üçün
-              onTap: () {
-                Get.focusScope?.unfocus();
-              },
-           child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: SingleChildScrollView(
-              controller: scrollController, // attach scrollController!
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Yeni hərəkət planı'.tr,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+            behavior:
+                HitTestBehavior.opaque, // boş sahələrdə klikləri də tutmaq üçün
+            onTap: () {
+              Get.focusScope?.unfocus();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: SingleChildScrollView(
+                controller: scrollController, // attach scrollController!
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Yeni hərəkət planı'.tr,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Get.back(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  HereketWidget(
-                    id: hereketController.selectedId,
-                    initial: initial,
-                    onSave: (HereketRequest dto) async {
-                      debugPrint('initialValues ${initial?.toJson()} ${dto}');
-                      if (initial == null) {
-                        await hereketController.saveNewHereket(dto);
-                        // await ctrl.fetchHereketPlani();
-                        Get.back();
-                      } else {
-                        // debugPrint('111111 ..${dto.toJson()}');
-                        await hereketController.updateHereket(dto);
-                        await ctrl.fetchHereketPlani();
-                        Get.back();
-                      }
-                    },
-                  ),
-                ],
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Get.back(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    HereketWidget(
+                      id: hereketController.selectedId,
+                      initial: initial,
+                      onSave: (HereketRequest dto) async {
+                        debugPrint('initialValues ${initial?.toJson()} ${dto}');
+                        if (initial == null) {
+                          await hereketController.saveNewHereket(dto);
+                          // await ctrl.fetchHereketPlani();
+                          Get.back();
+                        } else {
+                          // debugPrint('111111 ..${dto.toJson()}');
+                          await hereketController.updateHereket(dto);
+                          await ctrl.fetchHereketPlani();
+                          Get.back();
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          )
           );
         },
       ),
@@ -935,7 +1054,9 @@ class HereketPlaniPage extends StatelessWidget {
         const SizedBox(height: 12),
         Expanded(
           child: TrinaGridWidget<HereketResponse>(
-            key: ValueKey(ctrl.columns.map((Map<String, dynamic> c) => c['visible']).join()),
+            key: ValueKey(
+              ctrl.columns.map((Map<String, dynamic> c) => c['visible']).join(),
+            ),
             data: ctrl.herekets,
             selectedId: ctrl.selectedId,
             onSelect: (HereketResponse item) {

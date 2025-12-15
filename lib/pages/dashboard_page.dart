@@ -16,8 +16,7 @@ class DashboardPage extends StatelessWidget {
     bool isMobile = DeviceUtils.isMobile(context);
     return MainLayout(
       title: 'Dashboard',
-      body: Center(
-        child: SingleChildScrollView(
+      body:   SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: isMobile
               ? Column(
@@ -44,7 +43,7 @@ class DashboardPage extends StatelessWidget {
                   children: controller.menuItems.map((item) {
                     return SizedBox(
                       width: 200,
-                      height: 60,
+                      // height: 60,
                       child: _buildDashboardButton(
                         icon: item['icon'],
                         label: item['titleKey'].toString().tr,
@@ -61,8 +60,8 @@ class DashboardPage extends StatelessWidget {
                   }).toList(),
                 ),
         ),
-      ),
-    );
+      );
+
   }
 
   /// Modern Dashboard Button
@@ -71,32 +70,69 @@ class DashboardPage extends StatelessWidget {
     required String label,
     required VoidCallback onPressed,
   }) {
-    return ElevatedButton.icon(
+    return ElevatedButton(
       onPressed: onPressed,
-      icon: Icon(icon, size: 28),
-      label: Text(
-        label,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      style: ElevatedButton.styleFrom(
+        elevation: 5,
+        backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 22),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        shadowColor: Colors.black38,
       ),
-      style:
-          ElevatedButton.styleFrom(
-            elevation: 4,
-            backgroundColor: Colors.blueAccent, // M3 primary color
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+         child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Icon(icon, size: 24),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
             ),
-          ).copyWith(
-            // Hover effect for web/desktop
-            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.hovered))
-                return Colors.blue.shade700;
-              if (states.contains(WidgetState.pressed))
-                return Colors.blue.shade900;
-              return null;
-            }),
           ),
+        ],
+      ),
     );
+
+    // return ElevatedButton.icon(
+    //   onPressed: onPressed,
+    //   icon: Icon(icon, size: 28),
+    //   label: Text(
+    //     label,
+    //     style: const TextStyle(fontSize: 16,
+    //         fontWeight: FontWeight.w600,
+    //         letterSpacing: 0.3,),
+    //   ),
+    //   style:
+    //       ElevatedButton.styleFrom(
+    //         elevation: 5,
+    //         backgroundColor: Colors.blueAccent, // M3 primary color
+    //         foregroundColor: Colors.white,
+    //         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 22),
+    //         shape: RoundedRectangleBorder(
+    //           borderRadius: BorderRadius.circular(18),
+    //         ),
+    //         shadowColor: Colors.black38,
+    //       ).copyWith(
+    //         // Hover effect for web/desktop
+    //         overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+    //           if (states.contains(WidgetState.hovered))
+    //             return Colors.blue.shade700;
+    //             // return Colors.white.withOpacity(0.08);
+    //           if (states.contains(WidgetState.pressed))
+    //             // return Colors.black.withOpacity(0.12);
+    //             return Colors.blue.shade900;
+    //           return null;
+    //         }),
+    //       ),
+    // );
   }
 }

@@ -86,6 +86,7 @@ class _F1WidgetState extends State<F1Widget> {
               TextField(
                 controller: amountCtrl,
                 focusNode: amountFocus,
+                keyboardType: TextInputType.none,
                 decoration: const InputDecoration(
                   labelText: "Miqdar",
                   border: OutlineInputBorder(),
@@ -99,8 +100,9 @@ class _F1WidgetState extends State<F1Widget> {
                TextField(
                 controller: priceCtrl,
                 focusNode: priceFocus,
+                 keyboardType: TextInputType.none,
                 decoration: const InputDecoration(
-                  labelText: "Qiymet",
+                  labelText: "Qiymət",
                   border: OutlineInputBorder(),
                 ),
               ),)
@@ -112,8 +114,9 @@ class _F1WidgetState extends State<F1Widget> {
               TextField(
                 controller: sellPriceCtrl,
                 focusNode: sellPriceFocus,
+                keyboardType: TextInputType.none,
                 decoration: const InputDecoration(
-                  labelText: "Satis",
+                  labelText: "Satış",
                   border: OutlineInputBorder(),
                 ),
               ),),

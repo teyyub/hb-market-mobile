@@ -13,6 +13,8 @@ import 'package:hbmarket/modules/temizlenme_module/controller/temizlenme_control
 import 'package:hbmarket/modules/xerc_qazanc_module/controller/xercqazanc_controller.dart';
 import 'package:hbmarket/modules/yonlendirme_module/controller/yonlendirme_controller.dart';
 
+import 'modules/mal_hereketi_module/controller/mal_hereketi_controller.dart';
+
 class DrawerControllerX extends GetxController {
   List<Map<String, dynamic>> menuItems = [];
 
@@ -52,6 +54,10 @@ class DrawerControllerX extends GetxController {
     },
     'say-duzelt': () async {
       final c = Get.find<SayDuzeltController>();
+      // await c.fetchReports();
+    },
+    'mal-hereketi': () async {
+      final c = Get.find<MalHereketiController>();
       // await c.fetchReports();
     },
     'mal-yoxla': () async {

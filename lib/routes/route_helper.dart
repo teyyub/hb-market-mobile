@@ -8,6 +8,7 @@ import 'package:hbmarket/modules/kassa_module/pages/kassa_page.dart';
 import 'package:hbmarket/modules/lang_module/language_page.dart';
 import 'package:hbmarket/modules/login_module/pages/db_selection_page.dart';
 import 'package:hbmarket/modules/login_module/pages/login_page.dart';
+import 'package:hbmarket/modules/mal_hereketi_module/pages/mal_hereketi_page.dart';
 import 'package:hbmarket/modules/mal_yoxlanisi_module/pages/mal_yoxla_page.dart';
 import 'package:hbmarket/modules/pul_emeliyyat_module/pages/pul_emeliyyat_page.dart';
 import 'package:hbmarket/modules/pul_transfer_module/models/pul_tranfer_model.dart';
@@ -35,6 +36,7 @@ class RouteHelper {
   static const String pul_transfer = '/pul-transferleri';
   static const String pul_emeliyyat = '/pul-emeliyyatlari';
   static const String hereket_plani = '/hereket-plani';
+  static const String mal_hereketi = '/mal-hereketi';
   static const String mal_yoxlanisi = '/mal-yoxlanisi';
   static const String say_duzelt = '/say-duzelt';
   static const String temizlenme = '/temizlenme';
@@ -80,6 +82,12 @@ class RouteHelper {
       name: yonlendirme,
       page: () {
         return YonlendirmePage();
+      },
+    ),
+    GetPage(
+      name: mal_hereketi,
+      page: () {
+        return MalHereketiPage();
       },
     ),
     GetPage(

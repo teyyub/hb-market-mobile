@@ -101,6 +101,7 @@ class _ApplyWidgetState extends State<ApplyWidget> {
                TextField(
                 controller: input1Ctrl,
                 focusNode: input1Focus,
+                 keyboardType: TextInputType.none,
                 decoration: const InputDecoration(
                   labelText: "Cari",
                   border: OutlineInputBorder(),
@@ -114,6 +115,7 @@ class _ApplyWidgetState extends State<ApplyWidget> {
               TextField(
                 controller: input2Ctrl,
                 focusNode: input2Focus,
+                keyboardType: TextInputType.none,
                 decoration: const InputDecoration(
                   labelText: "Yeni",
                   border: OutlineInputBorder(),

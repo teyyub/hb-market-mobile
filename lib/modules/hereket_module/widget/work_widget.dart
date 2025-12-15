@@ -614,21 +614,21 @@ class _WorkWidgetState extends State<WorkWidget> {
                     note: noteController.text,
                   );
                   ctrl.ok(dto);
-                  // ctrl.clearQaimeler();
-                  // searchItemCtrl.clear();
-                  // rQiymetCtrl.clear();
-                  // amountController.clear();
+                  ctrl.clearQaimeler();
+                  searchItemCtrl.clear();
+                  rQiymetCtrl.clear();
+                  amountController.clear();
                   // // Scroll-u yuxarı aparın və focus verin
-                  // scrollCtrl.animateTo(
-                  //   0, // yuxarı
-                  //   duration: const Duration(milliseconds: 300),
-                  //   curve: Curves.easeInOut,
-                  // );
-                  //
-                  // // FocusScope.of(context).requestFocus(searchFocusNode);
-                  // WidgetsBinding.instance.addPostFrameCallback((_) {
-                  //   FocusScope.of(context).requestFocus(searchFocusNode);
-                  // });
+                  scrollCtrl.animateTo(
+                    0, // yuxarı
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+
+                  // FocusScope.of(context).requestFocus(searchFocusNode);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    FocusScope.of(context).requestFocus(searchFocusNode);
+                  });
 
 
                 } else if (hereketWorkCtrl.getSelectedValue == '1') {

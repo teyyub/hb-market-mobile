@@ -12,6 +12,7 @@ import 'package:hbmarket/modules/login_module/login_service/login_service.dart';
 import 'package:hbmarket/modules/mal_yoxlanisi_module/controller/mal_yoxla_controller.dart';
 import 'package:hbmarket/modules/object_module/controller/obyekt_controller.dart';
 import 'package:hbmarket/modules/partnyor_module/controller/partnyor_controller.dart';
+import 'package:hbmarket/modules/print_module/controller/qaime_print_controller.dart';
 import 'package:hbmarket/modules/pul_emeliyyat_module/controller/pul_emeliyyat_controller.dart';
 import 'package:hbmarket/modules/pul_transfer_module/controller/pul_transfer_controller.dart';
 import 'package:hbmarket/modules/raport_module/controller/report_controller.dart';
@@ -22,6 +23,7 @@ import 'package:hbmarket/thema/theme_controller.dart';
 
 import '../../http/api_class.dart';
 import '../hereket_module/controller/f1_controller.dart';
+import '../mal_hereketi_module/controller/mal_hereketi_controller.dart';
 
 class AppBindings extends Bindings {
   @override
@@ -34,6 +36,7 @@ class AppBindings extends Bindings {
       DbSelectionController(dbService: Get.find<DbService>()),
       permanent: true,
     ); // DB persistence controller
+    Get.lazyPut(() => QaimePrintController(), fenix: true);
     Get.lazyPut(() => QaimeBaxController(), fenix: true);
     Get.lazyPut(() => ReportController(), fenix: true);
     Get.lazyPut(() => ObyektController(), fenix: true);
@@ -45,6 +48,7 @@ class AppBindings extends Bindings {
     Get.lazyPut(() => SayDuzeltController(), fenix: true);
     Get.lazyPut(() => HereketPlaniController(), fenix: true);
     Get.lazyPut(() => MalYoxlaController(), fenix: true);
+    Get.lazyPut(() => MalHereketiController(), fenix: true);
     Get.lazyPut(() => HereketWorkController(), fenix: true);
     Get.lazyPut(() => TemizlenmeController(), fenix: true);
     Get.lazyPut(() => YonlendirmeController(), fenix: true);

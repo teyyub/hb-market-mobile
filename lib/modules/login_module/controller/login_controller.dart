@@ -57,6 +57,9 @@ class LoginController extends GetxController {
   void _loadAppVersion() async {
     final info = await PackageInfo.fromPlatform();
     appVersion = '${info.version}+${info.buildNumber}';
+    final version = appVersion.split('+')[0];
+    final shortVersion = version.split('.').sublist(0, 2).join('.');
+    appVersion = shortVersion;
     debugPrint('App Version: $appVersion');
     update(); // UI varsa göstərmək üçün
   }

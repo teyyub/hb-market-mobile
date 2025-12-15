@@ -40,6 +40,7 @@
     "hereket-plani": "Hərəkət Planı",
     "say-duzelt": "Bazadakı Sayı Düzelt",
     "mal-yoxlanisi": "Mal Yoxlanışı",
+    "mal-hereketi": "Mal Hərəkətləri",
     "temizlenme": "Təmizlənmə",
     "yonlendirme": "Yönləndirmə",
     "btnFetchReport": "Raportlara bax",
@@ -74,7 +75,8 @@
     "buttonDel": "Sil",
     "buttonWork": "İş",
     "buttonExit": "Çıx",
-    "percentage" : "Faiz"
+    "percentage" : "Faiz",
+    "buttonApply" : "Hərəkətə tətbiq et"
   },
   "ru": {
     "raportlar": "Отчеты",

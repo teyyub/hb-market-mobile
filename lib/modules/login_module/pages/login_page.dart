@@ -104,15 +104,16 @@ class LoginPage extends StatelessWidget {
                                   width: 100,                  // ölçü FlutterLogo kimi
                                   height: 100,
                                 ),
-                                const SizedBox(height: 132),
+                                const SizedBox(height: 30),
                                 Card(
-                                  elevation: 4,
+                                  elevation: 6,
+                                  shadowColor: Colors.black26,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   child:   Padding(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                                     child: Column(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-
                                         if (controller.isLoading)
                                           const CircularProgressIndicator()
                                         else if (controller.deviceMessage != null)
@@ -129,6 +130,7 @@ class LoginPage extends StatelessWidget {
                                             controller.deviceNote??'',
                                             style: const TextStyle(
                                               color: Colors.black87,
+                                              fontWeight: FontWeight.w600,
                                               fontSize: 15,
                                             ),
                                           ),
@@ -137,12 +139,14 @@ class LoginPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 12,),
+
                                 TextField(
                                   controller: controller.deviceController,
                                   readOnly:true,
                                   decoration: InputDecoration(
                                     labelText: "Kod".tr,
                                     border: const OutlineInputBorder(),
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
                                     suffixIcon: IconButton(
                                       icon: const Icon(Icons.copy),
                                       onPressed: () {
@@ -166,9 +170,11 @@ class LoginPage extends StatelessWidget {
                                 TextField(
                                   controller: controller.passwordController,
                                   decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
                                     labelText: 'password'.tr,
                                     border: const OutlineInputBorder(),
                                   ),
+
                                   obscureText: true,
                                   // readOnly: !controller.isPasswordEnabled,
                                   onChanged: (value) =>
@@ -179,11 +185,30 @@ class LoginPage extends StatelessWidget {
                                   width: double.infinity,
                                   child: ElevatedButton(
                                     onPressed:controller.loginV3,
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 32), // istədiyin hündürlük və en
+                                      textStyle: const TextStyle(fontSize: 22), // mətn ölçüsünü də artıra bilərsən
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12), // küncləri yuvarlaq
+                                      ),
+                                      elevation: 4, // kölgə
+                                      shadowColor: Colors.black45,
+                                      backgroundColor: Colors.blueAccent,
+                                      foregroundColor: Colors.white,
+                                    ),
                                     child: controller.isLoading
                                         ? const CircularProgressIndicator(
                                             color: Colors.white,
                                           )
-                                        : Text('btnLogin'.tr),
+                                        : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.login, size: 24), // login icon
+                                        const SizedBox(width: 12), // icon ilə yazı arası boşluq
+                                        Text('btnLogin'.tr),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 16),

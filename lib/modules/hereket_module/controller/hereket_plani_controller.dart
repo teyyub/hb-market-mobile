@@ -5,10 +5,12 @@ import 'package:hbmarket/config/customer_list.dart';
 import 'package:hbmarket/http/api_class.dart';
 import 'package:hbmarket/modules/common/utils/column_visibility.dart';
 import 'package:hbmarket/modules/customer_module/models/customer_model.dart';
+import 'package:hbmarket/modules/hereket_module/models/hereket_apply.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_dto.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_model.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_reponse.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_request.dart';
+import 'package:hbmarket/modules/hereket_module/models/hereket_selah_dto.dart';
 import 'package:hbmarket/modules/hereket_module/models/work_item.dart';
 import 'package:hbmarket/modules/hereket_module/service/hereket_service.dart';
 import 'package:hbmarket/modules/login_module/controller/db_selection_controller.dart';
@@ -17,7 +19,13 @@ import 'package:hbmarket/modules/partnyor_module/models/partnyor_model.dart';
 import 'package:hbmarket/modules/pul_transfer_module/models/pul_tranfer_model.dart';
 import 'package:hbmarket/modules/xerc_qazanc_module/models/xerc_qazanc_model.dart';
 
+import '../models/hereket_apply_response.dart';
+
 class HereketPlaniController extends GetxController with ColumnVisibilityMixin {
+
+  HereketApplyResponseDto? hereketApplyResponseDto;
+  HereketSelahDto? hereketSelah;
+  // HereketApplyDto? hereketApplyDto;
   List<HereketResponse> herekets = [];
   List<HereketDto> hereketDtos = [];
 
@@ -47,6 +55,8 @@ class HereketPlaniController extends GetxController with ColumnVisibilityMixin {
   WorkItem? _selectedWorkItem;
   WorkItem? get selectedWorkItem => _selectedWorkItem;
 
+  HereketApplyDto? _selectedHereketApplyDto;
+  HereketApplyDto? get selectedHereketApplyDto => _selectedHereketApplyDto;
 
   HereketDto? _selectedHereket;
   HereketDto? get selectedHereketDto => _selectedHereket;
@@ -106,6 +116,48 @@ class HereketPlaniController extends GetxController with ColumnVisibilityMixin {
 
   }
 
+
+  Future<HereketSelahDto> checkHereketSelah(int selKey) async {
+    final dbId = DbSelectionController.to.getDbId;
+    try {
+      isLoading = true;
+      update();
+      errorMessage = '';
+      print('dbId.....->${dbId}');
+      final HereketSelahDto result = await service.checkHereketSelah(dbId,selKey);
+      // debugPrint(result.toJson());
+      return result;
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+      update();
+    }
+  }
+
+  Future<HereketApplyResponseDto> hereketApply() async {
+    final dbId = DbSelectionController.to.getDbId;
+    if (_selectedHereketApplyDto == null) {
+      throw Exception("HereketApplyDto set edilməyib");
+    }
+    try {
+
+      isLoading = true;
+      update();
+      errorMessage = '';
+      print('dbId.....->${dbId}');
+      print('apllyDto.....->${_selectedHereketApplyDto?.toJson()}');
+      final result =  await service.hereketApply(dbId,_selectedHereketApplyDto!);
+      return result;
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+      update();
+    }
+  }
 
 
   Future<void> fetchHereketPlani() async {
@@ -217,6 +269,12 @@ class HereketPlaniController extends GetxController with ColumnVisibilityMixin {
   void setSelectedHereketDto(HereketDto r) {
     _selectedHereket = r;
     debugPrint('hereketDto - > ${r}');
+    update();
+  }
+
+  void setHereketApplyDto(HereketApplyDto r) {
+    _selectedHereketApplyDto = r;
+    debugPrint('hereketApplyDto - > ${r.toJson()}');
     update();
   }
 

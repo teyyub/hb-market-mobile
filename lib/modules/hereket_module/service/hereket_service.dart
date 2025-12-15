@@ -3,20 +3,18 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:hbmarket/http/api_class.dart';
-import 'package:hbmarket/modules/baza_duzelt_module/models/say_duzelt_request.dart';
 import 'package:hbmarket/modules/hereket_module/models/daime.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_dplan.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_dto.dart';
-import 'package:hbmarket/modules/hereket_module/models/hereket_model.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_reponse.dart';
 import 'package:hbmarket/modules/hereket_module/models/hereket_request.dart';
-import 'package:hbmarket/modules/partnyor_module/models/partnyor_model.dart';
-import 'package:hbmarket/modules/partnyor_module/models/update_request_dto.dart';
-import 'package:hbmarket/modules/partnyor_module/models/xerc_request_dto.dart';
+import 'package:hbmarket/modules/hereket_module/models/hereket_selah_dto.dart';
 import 'package:http/src/response.dart';
 
 import '../../common/api_messages.dart';
 import '../models/apply_dto.dart';
+import '../models/hereket_apply.dart';
+import '../models/hereket_apply_response.dart';
 import '../models/qaime_bax.dart';
 import '../models/update_apply.dart';
 
@@ -77,6 +75,60 @@ class HereketService {
               (json) => HereketResponse.fromJson(json as Map<String, dynamic>),
             )
             .toList();
+      } else {
+        throw HttpException(
+          'Failed to load herekets. Status code: ${response.statusCode}',
+        );
+      }
+    } on HttpException catch (e) {
+      print('HTTP error: $e');
+      rethrow; // Rethrow if you want upstream handling
+    } on FormatException catch (e) {
+      print('JSON format error: $e');
+      throw FormatException('Invalid JSON format received from API');
+    } on Exception catch (e) {
+      print('Unexpected error: $e');
+      throw Exception('Failed to fetch herekets: $e');
+    }
+  }
+
+
+  Future<HereketApplyResponseDto> hereketApply(
+      int dbKey,
+      HereketApplyDto dto,
+      ) async {
+    final endpoint = '/api/hereket-plani/hereket-apply?dbKey=$dbKey';
+    try {
+      final response = await client.post(endpoint, body: dto.toJson());
+
+      if (response.statusCode == 200) {
+        debugPrint('applyDto:${response.body}');
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return HereketApplyResponseDto.fromJson(data);
+      } else {
+        throw HttpException('Failed to update hereket: ${response.statusCode}');
+      }
+    } on HttpException catch (e) {
+      print('HTTP error: $e');
+      rethrow; // Rethrow if you want upstream handling
+    } on FormatException catch (e) {
+      print('JSON format error: $e');
+      throw FormatException('Invalid JSON format received from API');
+    } on Exception catch (e) {
+      print('Unexpected error: $e');
+      throw Exception('Failed to fetch herekets: $e');
+    }
+  }
+
+
+  Future<HereketSelahDto> checkHereketSelah(int dbKey, int selKey) async {
+    final String endpoint = '/api/hereket-plani/selah?dbKey=$dbKey&selKey=$selKey';
+    try {
+      final Response response = await client.get(endpoint);
+      if (response.statusCode == 200) {
+        debugPrint('hereketServive...${response.body}');
+        final  jsonList = json.decode(response.body);
+        return HereketSelahDto.fromJson(jsonList) ;
       } else {
         throw HttpException(
           'Failed to load herekets. Status code: ${response.statusCode}',
