@@ -47,7 +47,7 @@ jobs:
 
       - name: Verify keystore files
         run: |
-          ls -l android/key.jks android/app/key.properties 
+          ls -l android/app/key.jks android/app/key.properties 
     
 
       # 🟢 Build Android APK
