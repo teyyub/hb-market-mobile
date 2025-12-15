@@ -59,6 +59,35 @@ jobs:
           echo "=== Print content directly ==="
           cat android/app/key.properties
 
+      - name: Verify secrets are not empty
+        run: |
+          echo "=== Checking if values exist (without showing them) ==="
+          # Count characters in each value (excluding the property name)
+          for prop in storePassword keyAlias keyPassword; do
+            value_length=$(grep "^${prop}=" android/app/key.properties | cut -d'=' -f2 | wc -c)
+            if [ $value_length -gt 1 ]; then
+              echo "✅ $prop has value (length: $((value_length-1))) chars)"
+            else
+              echo "❌ $prop is EMPTY or missing!"
+            fi
+          done
+
+      - name: Verify file format
+        run: |
+          echo "=== Verifying file structure ==="
+          # Check line count
+          line_count=$(wc -l < android/app/key.properties)
+          echo "File has $line_count lines (should be 4)"
+          
+          # Check each property exists (regardless of value)
+          for prop in storeFile storePassword keyAlias keyPassword; do
+            if grep -q "^${prop}=" android/app/key.properties; then
+              echo "✅ Property '$prop' exists"
+            else
+              echo "❌ Property '$prop' MISSING!"
+            fi
+          done
+
       # 🟢 Build Android APK
       - name: Build Android APK
         run: flutter build apk --release
